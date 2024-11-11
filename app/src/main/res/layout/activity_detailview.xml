@@ -11,12 +11,18 @@
         android:hint="@string/name"
         app:layout_constraintTop_toTopOf="parent">
     </EditText>
+    <CheckBox
+        android:id="@+id/itemchecked"
+        app:layout_constraintTop_toBottomOf="@id/itemName"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
     <EditText
         android:id="@+id/itemDescription"
         android:layout_width="match_parent"
         android:hint="@string/description"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/itemName">
+        app:layout_constraintTop_toBottomOf="@id/itemchecked">
     </EditText>
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/dateTextInputLayout"
@@ -33,7 +39,7 @@
 
     </com.google.android.material.textfield.TextInputLayout>
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab"
+        android:id="@+id/saveButton"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         android:src="@drawable/baseline_save_white_24dp"

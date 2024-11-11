@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.dieschnittstelle.mobile.android.skeleton" >
+     >
 
     <application
         android:allowBackup="true"
@@ -12,15 +12,16 @@
         android:usesCleartextTraffic="true" >
 
         <activity
-            android:name=".MainActivity"
+            android:name="org.dieschnittstelle.mobile.android.todo.MainActivity"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".DetailviewActivity" />
+        <activity android:name="org.dieschnittstelle.mobile.android.todo.widgets.DatePickerActivity" />
+
+        <activity android:name="org.dieschnittstelle.mobile.android.todo.DetailviewActivity" />
     </application>
 
 </manifest>

@@ -3,14 +3,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="org.dieschnittstelle.mobile.android.skeleton.MainActivity">
-    <LinearLayout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="org.dieschnittstelle.mobile.android.todo.MainActivity">
+
+
+    <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:id="@+id/listview"
-        >
-
-    </LinearLayout>
+        android:id="@+id/listview"/>
+    
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/addButton"
+        app:srcCompat="@drawable/baseline_add_white_24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_margin="16dp"
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

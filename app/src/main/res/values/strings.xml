@@ -3,4 +3,5 @@
     <string name="welcome_message">Welcome to MAD W23</string>
     <string name="name">Name</string>
     <string name="description">Description</string>
+    <string name="on_result_from_detailview_msg">"Show new data: "</string>
 </resources>
