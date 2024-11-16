@@ -12,7 +12,7 @@
         android:usesCleartextTraffic="true" >
 
         <activity
-            android:name="org.dieschnittstelle.mobile.android.todo.MainActivity"
+            android:name="org.dieschnittstelle.mobile.android.todo.OverviewActivity"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

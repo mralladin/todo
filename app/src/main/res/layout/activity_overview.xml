@@ -4,14 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context="org.dieschnittstelle.mobile.android.todo.MainActivity">
-
-
+    tools:context="org.dieschnittstelle.mobile.android.todo.OverviewActivity">
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/listview"/>
-    
+        android:id="@+id/listview"
+        />
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
