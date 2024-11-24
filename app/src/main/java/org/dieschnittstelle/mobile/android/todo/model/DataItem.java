@@ -11,8 +11,6 @@ import java.util.Objects;
 @Entity
 public class DataItem implements Serializable {
 
-    private static int IDCOUNT=0;
-
     @PrimaryKey(autoGenerate = true)
     private long id;
     private String name;
@@ -27,13 +25,12 @@ public class DataItem implements Serializable {
         this.id = id;
     }
 
+
     public DataItem(String name) {
         this.name = name;
-        this.id= ++IDCOUNT;
     }
 
     public DataItem() {
-        this.id= ++IDCOUNT;
     }
 
     public String getName() {

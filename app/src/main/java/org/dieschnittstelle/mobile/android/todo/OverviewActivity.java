@@ -9,8 +9,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -19,6 +21,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -26,6 +29,7 @@ import org.dieschnittstelle.mobile.android.skeleton.R;
 import org.dieschnittstelle.mobile.android.todo.model.DataItem;
 import org.dieschnittstelle.mobile.android.todo.model.IDataItemCRUDOperations;
 import org.dieschnittstelle.mobile.android.todo.model.LocalItemCRUDOperationsWithRoom;
+import org.dieschnittstelle.mobile.android.todo.security.AuthManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,12 +47,41 @@ public class OverviewActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AuthManager authManager = new AuthManager();
+
+
+
+        if (authManager.getCurrentUser() == null) {
+            // Kein Benutzer angemeldet -> zur Login-Seite weiterleiten
+            startLoginActivity();
+
+        } else {
+            // Benutzer ist angemeldet -> App normal starten
+            Toast.makeText(this, "Willkommen, " + authManager.getCurrentUser().getEmail(), Toast.LENGTH_SHORT).show();
+        }
+
+
         setContentView(R.layout.activity_overview);
-//        listData.addAll(
-//                Arrays.asList("Lorem","Ipsum","Todorala")
-//                        .stream()
-//                        .map(name -> new DataItem(name)).collect(Collectors.toList())
-//        );
+
+
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+// Optional: Überprüfen, ob getSupportActionBar() null ist
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Meine App");
+        }
+        if (getSupportActionBar() == null) {
+            Log.e("ToolbarError", "SupportActionBar konnte nicht initialisiert werden");
+        }
+
+        ImageButton logoutButton= findViewById(R.id.toolbar_button);
+        logoutButton.setOnClickListener(a ->{
+            authManager.logout();
+            startLoginActivity();
+        });
+
         listView=findViewById(R.id.listview);
 
         this.crudOperations=new LocalItemCRUDOperationsWithRoom(this);
@@ -73,6 +106,24 @@ public class OverviewActivity extends AppCompatActivity {
                         }
                 );
 
+                //DELETE
+                // Delete-Button Klick-Listener
+                Button deleteButton = listItemView.findViewById(R.id.deleteButton);
+                deleteButton.setOnClickListener(v -> {
+                    new Thread(() -> {
+                        // Element aus der Datenbank entfernen
+                        crudOperations.deleteDataItem(listItem.getId());
+
+                        // Element aus der lokalen Liste entfernen
+                        runOnUiThread(() -> {
+                            listData.remove(position);
+                            notifyDataSetChanged();
+                            Toast.makeText(OverviewActivity.this, listItem.getName() + " gelöscht", Toast.LENGTH_SHORT).show();
+                        });
+                    }).start();
+                });
+
+
                 return listItemView;
 
 
@@ -88,15 +139,6 @@ public class OverviewActivity extends AppCompatActivity {
                 showDetailviewForItem(selectedItem);
             }
         });
-//        Arrays.asList("Lorem","Ipsum","Todorala")
-//                .stream()
-//                .map(name -> new DataItem(name))
-//                .forEach(item -> {
-//            TextView currentItemView = (TextView) getLayoutInflater().inflate(R.layout.activity_overview_simple_list_item_view, null);
-//            currentItemView.setText(item.getName());
-//            listView.addView(currentItemView);
-//            currentItemView.setOnClickListener(view -> showDetailviewForItem(item));
-//        });
 
         FloatingActionButton addItems = findViewById(R.id.addButton);
         addItems.setOnClickListener(view -> {
@@ -134,7 +176,12 @@ public class OverviewActivity extends AppCompatActivity {
 
     }
 
-        protected void showDetailviewForItem(DataItem item){
+    private void startLoginActivity() {
+        startActivity(new Intent(this, LoginActivity.class));
+        finish();
+    }
+
+    protected void showDetailviewForItem(DataItem item){
             Intent callDetailviewIntent = new Intent(this, DetailviewActivity.class);
             callDetailviewIntent.putExtra(ARG_ITEM,item);
             startActivityForResult(callDetailviewIntent, REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_EDIT);

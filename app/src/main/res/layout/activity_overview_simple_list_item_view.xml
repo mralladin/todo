@@ -21,9 +21,19 @@
     android:padding="10dp"
     app:layout_constraintLeft_toRightOf="@id/itemChecked"
     app:layout_constraintBottom_toBottomOf="parent"
-
     app:layout_constraintTop_toTopOf="parent"
     >
 </TextView>
+    <Button
+        android:id="@+id/deleteButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawableStart="@drawable/scaled_delete_icon"
+    android:drawablePadding="8dp"
+    android:background="?attr/selectableItemBackground"
+    android:contentDescription="Delete"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintBottom_toBottomOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

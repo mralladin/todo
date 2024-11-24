@@ -12,6 +12,8 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.Update;
 
+import com.google.firebase.firestore.FirebaseFirestore;
+
 import java.util.Collections;
 import java.util.List;
 @Entity
@@ -37,38 +39,75 @@ public class LocalItemCRUDOperationsWithRoom implements IDataItemCRUDOperations{
         public abstract SQLiteDataItemCRUDOperations getDao();
     }
 
-    private DataItemDatabase db;
 
+    private SQLiteDataItemCRUDOperations localDao;
+    private FirebaseFirestore firestore;
+
+    private DataItemDatabase db;
     public LocalItemCRUDOperationsWithRoom(Context context ){
-        db = Room.databaseBuilder(context.getApplicationContext(),
-                DataItemDatabase.class ,"dataitems-db"
-                ).build();
+        // Room-Setup
+        DataItemDatabase db = Room.databaseBuilder(
+                context.getApplicationContext(),
+                DataItemDatabase.class,
+                "dataitems-db"
+        ).build();
+        this.localDao = db.getDao();
+
+        // Firestore-Setup
+        this.firestore = FirebaseFirestore.getInstance();
     }
 
     @Override
     public DataItem createDataItem(DataItem item) {
-        long newId = db.getDao().createItem(item);
+        // Speichern in Room
+        long newId = localDao.createItem(item);
         item.setId(newId);
+
+        // Speichern in Firestore
+        firestore.collection("dataitems")
+                .document(String.valueOf(item.getId()))
+                .set(item);
+
         return item;
     }
 
     @Override
-    public List<DataItem> readAllDataItems()  {
-        return db.getDao().readAllItems();
+    public List<DataItem> readAllDataItems() {
+        // Zuerst lokale Daten laden
+        return localDao.readAllItems();
     }
 
     @Override
     public DataItem readDataItem(long id) {
-        return null;
+        // Firestore oder Room (hybrides Modell möglich)
+        return localDao.readItem(id);
     }
 
     @Override
     public Boolean updateDataItem(DataItem item) {
+        // Update in Room
+        localDao.updateItem(item);
+
+        // Update in Firestore
+        firestore.collection("dataitems")
+                .document(String.valueOf(item.getId()))
+                .set(item);
+
         return true;
     }
 
     @Override
     public DataItem deleteDataItem(long id) {
-        return null;
+        DataItem item = localDao.readItem(id);
+
+        // Löschen aus Room
+        localDao.deleteItem(item);
+
+        // Löschen aus Firestore
+        firestore.collection("dataitems")
+                .document(String.valueOf(item.getId()))
+                .delete();
+
+        return item;
     }
 }
