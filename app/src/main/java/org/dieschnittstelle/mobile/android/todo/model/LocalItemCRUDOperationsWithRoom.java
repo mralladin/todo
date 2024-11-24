@@ -10,9 +10,12 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.room.TypeConverters;
 import androidx.room.Update;
 
 import com.google.firebase.firestore.FirebaseFirestore;
+
+import org.dieschnittstelle.mobile.android.todo.util.DateConverter;
 
 import java.util.Collections;
 import java.util.List;
@@ -33,8 +36,9 @@ public class LocalItemCRUDOperationsWithRoom implements IDataItemCRUDOperations{
         public DataItem readItem(long id);
 
     }
-   @Database(entities = DataItem.class, version = 1)
-    public abstract static class DataItemDatabase extends RoomDatabase{
+   @Database(entities = DataItem.class, version = 3)
+   @TypeConverters({DateConverter.class}) // Converter hinzufügen
+   public abstract static class DataItemDatabase extends RoomDatabase{
 
         public abstract SQLiteDataItemCRUDOperations getDao();
     }
@@ -49,8 +53,10 @@ public class LocalItemCRUDOperationsWithRoom implements IDataItemCRUDOperations{
         DataItemDatabase db = Room.databaseBuilder(
                 context.getApplicationContext(),
                 DataItemDatabase.class,
-                "dataitems-db"
-        ).build();
+                "dataitems-db")
+                .fallbackToDestructiveMigration() // Alte Daten werden gelöscht
+
+                .build();
         this.localDao = db.getDao();
 
         // Firestore-Setup
@@ -86,13 +92,16 @@ public class LocalItemCRUDOperationsWithRoom implements IDataItemCRUDOperations{
     @Override
     public Boolean updateDataItem(DataItem item) {
         // Update in Room
-        localDao.updateItem(item);
+       new Thread(() ->
+       {
+           localDao.updateItem(item);
+           // Update in Firestore
+           firestore.collection("dataitems")
+                   .document(String.valueOf(item.getId()))
+                   .set(item);
 
-        // Update in Firestore
-        firestore.collection("dataitems")
-                .document(String.valueOf(item.getId()))
-                .set(item);
-
+       }
+               ).start();
         return true;
     }
 

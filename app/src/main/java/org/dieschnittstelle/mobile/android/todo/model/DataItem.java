@@ -1,11 +1,14 @@
 package org.dieschnittstelle.mobile.android.todo.model;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
+import androidx.room.TypeConverters;
+
+import org.dieschnittstelle.mobile.android.todo.util.DateConverter;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.Objects;
 
 @Entity
@@ -16,6 +19,10 @@ public class DataItem implements Serializable {
     private String name;
     private String description;
     private boolean checked;
+    private String phonenr;
+    private int prio;
+    @TypeConverters(DateConverter.class) // Verwende einen Converter für Room
+    private Date tbdDate;
 
     public long getId() {
         return id;
@@ -30,7 +37,31 @@ public class DataItem implements Serializable {
         this.name = name;
     }
 
+    public Date getTbdDate() {
+        return tbdDate;
+    }
+
+    public void setTbdDate(Date tbdDate) {
+        this.tbdDate = tbdDate;
+    }
+
+    public int getPrio() {
+        return prio;
+    }
+
+    public void setPrio(int prio) {
+        this.prio = prio;
+    }
+
     public DataItem() {
+    }
+
+    public String getPhonenr() {
+        return phonenr;
+    }
+
+    public void setPhonenr(String phonenr) {
+        this.phonenr = phonenr;
     }
 
     public String getName() {

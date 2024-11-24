@@ -6,13 +6,17 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.DatePicker;
 import android.widget.TextView;
+import android.widget.TimePicker;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.dieschnittstelle.mobile.android.skeleton.R;
 import org.dieschnittstelle.mobile.android.todo.OverviewActivity;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 public class DatePickerActivity extends Activity {
     /** Called when the activity is first created. */
@@ -23,13 +27,46 @@ public class DatePickerActivity extends Activity {
 
         // der DatePicker
         DatePicker picker = (DatePicker)findViewById(R.id.datepicker);
+        TimePicker timepicker = (TimePicker) findViewById(R.id.timepicker);
+        timepicker.setIs24HourView(true);
+
 
         // das Textfeld zur textuellen Darstellung des Datums
         final TextView dateAsText = (TextView)findViewById(R.id.dateAsText);
-        FloatingActionButton saveDate = findViewById(R.id.saveDateButton);
+        FloatingActionButton saveDateButton = findViewById(R.id.saveDateButton);
         dateAsText.setText(new Date().toString());
 
-        picker.init(picker.getYear(),picker.getMonth(),picker.getDayOfMonth(), new DatePicker.OnDateChangedListener() {
+
+        saveDateButton.setOnClickListener(v -> {
+            //Log.i("DateLogg,",dateAsText.getText().toString());
+            //Log.i("DateLogg,","hour "+timepicker.getHour());
+            //Log.i("DateLogg,","min "+
+            // Datum und Uhrzeit aus den Pickern lesen
+            int year = picker.getYear();
+            int month = picker.getMonth(); // Monate starten bei 0
+            int day = picker.getDayOfMonth();
+            int hour = timepicker.getHour();
+            int minute = timepicker.getMinute();
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(year, month, day, hour, minute);
+
+            // Formatieren des Datums
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault());
+            String formattedDate = dateFormat.format(calendar.getTime());
+
+            // Zurückgeben Datum
+            Intent resultIntent = new Intent();
+            resultIntent.putExtra("result_key", formattedDate);
+
+            setResult(RESULT_OK, resultIntent);
+            finish();
+
+        });
+
+
+
+        /*picker.init(picker.getYear(),picker.getMonth(),picker.getDayOfMonth(), new DatePicker.OnDateChangedListener() {
 
             @Override
             public void onDateChanged(DatePicker view, int year, int monthOfYear,
@@ -52,7 +89,7 @@ public class DatePickerActivity extends Activity {
                 setResult(RESULT_OK, resultIntent);
                 finish();
             }
-        });
+        });*/
 
     }
 }

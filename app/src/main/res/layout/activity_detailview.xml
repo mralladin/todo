@@ -36,8 +36,15 @@
             android:layout_height="wrap_content"
             android:focusable="false"
             android:clickable="true" />
-
     </com.google.android.material.textfield.TextInputLayout>
+    <Spinner
+        android:id="@+id/prioritySpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/dateTextInputLayout"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginTop="16dp"
+        android:entries="@array/priority_values" />
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/saveButton"
         app:layout_constraintBottom_toBottomOf="parent"

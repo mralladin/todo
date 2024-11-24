@@ -4,4 +4,11 @@
     <string name="name">Name</string>
     <string name="description">Description</string>
     <string name="on_result_from_detailview_msg">"Show new data: "</string>
+    <string-array name="priority_values">
+        <item>Niedrig</item>
+        <item>Normal</item>
+        <item>Hoch</item>
+        <item>Sehr Hoch</item>
+    </string-array>
+
 </resources>

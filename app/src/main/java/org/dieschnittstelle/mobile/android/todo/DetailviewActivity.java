@@ -15,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import org.dieschnittstelle.mobile.android.skeleton.R;
 import org.dieschnittstelle.mobile.android.todo.model.DataItem;
@@ -77,6 +79,10 @@ public class DetailviewActivity extends AppCompatActivity {
         item.setName(itemNameEditedText.getText().toString());
         item.setChecked(itemCheckbox.isChecked());
         item.setDescription(description.getText().toString());
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            item.setPhonenr(user.getPhoneNumber());
+        }
         returnIntent.putExtra(OverviewActivity.ARG_ITEM,item);
         Log.i("TestLog","Hello");
         this.setResult(DetailviewActivity.RESULT_OK,returnIntent);
@@ -99,7 +105,8 @@ public class DetailviewActivity extends AppCompatActivity {
                     Intent data = result.getData();
                     if (data != null) {
                         String returnedData = data.getStringExtra("result_key");
-                        dateEditText.setText("Zurückgegebene Daten: " + returnedData);
+                        dateEditText.setText(returnedData);
+                        Log.i("DateLogg",returnedData);
                     }
                 }
             }
