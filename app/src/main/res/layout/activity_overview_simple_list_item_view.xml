@@ -24,17 +24,25 @@
     app:layout_constraintTop_toTopOf="parent"
     >
 </TextView>
+    <ImageView
+        android:id="@+id/priorityIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:contentDescription="Priority Icon"
+        app:layout_constraintEnd_toStartOf="@+id/deleteButton"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:srcCompat="@drawable/baseline_star_24" />
     <Button
         android:focusable="false"
         android:id="@+id/deleteButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:drawableStart="@drawable/scaled_delete_icon"
-    android:drawablePadding="8dp"
+        android:drawableStart="@drawable/baseline_delete_24"
     android:background="?attr/selectableItemBackground"
     android:contentDescription="Delete"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintTop_toTopOf="parent"
     app:layout_constraintBottom_toBottomOf="parent" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>

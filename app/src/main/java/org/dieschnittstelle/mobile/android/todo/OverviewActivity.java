@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -22,6 +23,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -40,6 +43,8 @@ public class OverviewActivity extends AppCompatActivity {
     private List<DataItem> listData=new ArrayList<>();
     private ArrayAdapter<DataItem> listviewAdapter;
     public static String ARG_ITEM="item";
+    private SwipeRefreshLayout swipeRefreshLayout;
+
     protected final int REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_EDIT = 1;
     protected final int REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_CREATE = 2;
     private IDataItemCRUDOperations crudOperations;
@@ -48,6 +53,8 @@ public class OverviewActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         AuthManager authManager = new AuthManager();
+        setContentView(R.layout.activity_overview);
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
 
 
 
@@ -61,12 +68,21 @@ public class OverviewActivity extends AppCompatActivity {
         }
 
 
-        setContentView(R.layout.activity_overview);
+
 
 
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        // Swipe-Refresh-Listener hinzufügen
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            // Aktion ausführen, z. B. neue Daten laden
+            refreshData();
+
+            // Nach Abschluss der Aktion den Ladespinner ausblenden
+            swipeRefreshLayout.setRefreshing(false);
+        });
 
 // Optional: Überprüfen, ob getSupportActionBar() null ist
         if (getSupportActionBar() != null) {
@@ -95,6 +111,8 @@ public class OverviewActivity extends AppCompatActivity {
 
                 DataItem listItem = getItem(position);
                 ((TextView)listItemView.findViewById(R.id.itemNameInOvervoew)).setText(listItem.getName());
+
+                setImageViewColor((ImageView)listItemView.findViewById(R.id.priorityIcon),listItem.getPrio());
 
                 ((CheckBox)listItemView.findViewById(R.id.itemChecked)).setChecked(listItem.isChecked());
                 ((CheckBox)listItemView.findViewById(R.id.itemChecked)).setOnCheckedChangeListener(
@@ -186,6 +204,31 @@ public class OverviewActivity extends AppCompatActivity {
             callDetailviewIntent.putExtra(ARG_ITEM,item);
             startActivityForResult(callDetailviewIntent, REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_EDIT);
         }
+
+    private void refreshData() {
+        // Neue Daten hinzufügen oder Aktion durchführen
+
+        listviewAdapter.notifyDataSetChanged();
+    }
+
+    private void setImageViewColor(ImageView priorityIcon,int priority){
+
+        switch (priority) {
+            case 0: // Niedrige Priorität
+                priorityIcon.setColorFilter(ContextCompat.getColor(this, R.color.gray));
+                break;
+            case 1: // Mittlere Priorität
+                priorityIcon.setColorFilter(ContextCompat.getColor(this, R.color.blue));
+                break;
+            case 2: // Hohe Priorität
+                priorityIcon.setColorFilter(ContextCompat.getColor(this, R.color.orange));
+                break;
+            case 3: // Höchste Priorität
+                priorityIcon.setColorFilter(ContextCompat.getColor(this, R.color.red));
+                break;
+        }
+    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {

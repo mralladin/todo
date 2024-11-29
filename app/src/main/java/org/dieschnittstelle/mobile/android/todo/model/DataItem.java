@@ -19,10 +19,11 @@ public class DataItem implements Serializable {
     private String name;
     private String description;
     private boolean checked;
-    private String phonenr;
+    private String useridcreated;
+    private String useridassigned;
     private int prio;
     @TypeConverters(DateConverter.class) // Verwende einen Converter für Room
-    private Date tbdDate;
+    private Long tbdDate;
 
     public long getId() {
         return id;
@@ -37,11 +38,11 @@ public class DataItem implements Serializable {
         this.name = name;
     }
 
-    public Date getTbdDate() {
+    public Long getTbdDate() {
         return tbdDate;
     }
 
-    public void setTbdDate(Date tbdDate) {
+    public void setTbdDate(Long tbdDate) {
         this.tbdDate = tbdDate;
     }
 
@@ -56,12 +57,20 @@ public class DataItem implements Serializable {
     public DataItem() {
     }
 
-    public String getPhonenr() {
-        return phonenr;
+    public String getUseridcreated() {
+        return useridcreated;
     }
 
-    public void setPhonenr(String phonenr) {
-        this.phonenr = phonenr;
+    public void setUseridcreated(String useridcreated) {
+        this.useridcreated = useridcreated;
+    }
+
+    public String getUseridassigned() {
+        return useridassigned;
+    }
+
+    public void setUseridassigned(String useridassigned) {
+        this.useridassigned = useridassigned;
     }
 
     public String getName() {

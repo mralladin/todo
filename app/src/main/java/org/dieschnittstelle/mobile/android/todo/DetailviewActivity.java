@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -22,15 +23,24 @@ import org.dieschnittstelle.mobile.android.skeleton.R;
 import org.dieschnittstelle.mobile.android.todo.model.DataItem;
 import org.dieschnittstelle.mobile.android.todo.widgets.DatePickerActivity;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
 public class DetailviewActivity extends AppCompatActivity {
 
     protected static final String LOG_TAG = DetailviewActivity.class.getName();
     private TextInputEditText dateEditText;
     private FloatingActionButton saveButton;
     private String selectedDate;
+    private Long tbdTimestamp;
     private EditText itemNameEditedText;
     private CheckBox itemCheckbox;
     private TextView description;
+    private int prioValue=0;
+    private Date tbdDate;
+    private Spinner prioritySpinner;
     public DetailviewActivity(){
         Log.i(LOG_TAG,"contructor called");
     }
@@ -56,7 +66,13 @@ public class DetailviewActivity extends AppCompatActivity {
         itemCheckbox =  findViewById(R.id.itemchecked);
         itemCheckbox.setChecked(item.isChecked());
 
+        prioritySpinner = findViewById(R.id.prioritySpinner);
+        prioritySpinner.setSelection(item.getPrio());
+
+
         dateEditText = findViewById(R.id.dateEditText);
+        dateEditText.setText(getFormatesDateStringFromLong(item.getTbdDate()));
+
         saveButton = findViewById(R.id.saveButton);
 
         description = findViewById(R.id.itemDescription);
@@ -79,12 +95,14 @@ public class DetailviewActivity extends AppCompatActivity {
         item.setName(itemNameEditedText.getText().toString());
         item.setChecked(itemCheckbox.isChecked());
         item.setDescription(description.getText().toString());
+        item.setTbdDate(tbdTimestamp);
+        item.setPrio(prioritySpinner.getSelectedItemPosition());
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
-            item.setPhonenr(user.getPhoneNumber());
+            item.setUseridcreated(user.getUid());
         }
         returnIntent.putExtra(OverviewActivity.ARG_ITEM,item);
-        Log.i("TestLog","Hello");
+        Log.e("TestLog","Hello: "+R.id.dateAsText);
         this.setResult(DetailviewActivity.RESULT_OK,returnIntent);
         this.finish();
     }
@@ -97,6 +115,33 @@ public class DetailviewActivity extends AppCompatActivity {
 
     }
 
+    private void parseDateString(String dateString){
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+
+        try {
+            // String in Date konvertieren
+            tbdDate = dateFormat.parse(dateString);
+
+            // Date in Millisekunden umwandeln
+            tbdTimestamp = tbdDate.getTime();
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String getFormatesDateStringFromLong(Long timestamp){
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+        if(timestamp==null){
+            timestamp=new Date().getTime();
+        }
+        // Timestamp in Date umwandeln
+        Date date = new Date(timestamp);
+
+        // Date in das gewünschte String-Format umwandeln
+        return dateFormat.format(date);
+    }
+
 
     private final ActivityResultLauncher<Intent> startForResult = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -105,8 +150,9 @@ public class DetailviewActivity extends AppCompatActivity {
                     Intent data = result.getData();
                     if (data != null) {
                         String returnedData = data.getStringExtra("result_key");
+                        Log.e("TestLog",returnedData.toString());
                         dateEditText.setText(returnedData);
-                        Log.i("DateLogg",returnedData);
+                        parseDateString(returnedData);
                     }
                 }
             }
