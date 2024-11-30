@@ -2,8 +2,10 @@ package org.dieschnittstelle.mobile.android.todo;
 
 import static java.lang.String.format;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +25,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -35,6 +38,7 @@ import org.dieschnittstelle.mobile.android.todo.model.LocalItemCRUDOperationsWit
 import org.dieschnittstelle.mobile.android.todo.security.AuthManager;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class OverviewActivity extends AppCompatActivity {
@@ -44,6 +48,7 @@ public class OverviewActivity extends AppCompatActivity {
     private ArrayAdapter<DataItem> listviewAdapter;
     public static String ARG_ITEM="item";
     private SwipeRefreshLayout swipeRefreshLayout;
+
 
     protected final int REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_EDIT = 1;
     protected final int REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_CREATE = 2;
@@ -108,12 +113,16 @@ public class OverviewActivity extends AppCompatActivity {
             @Override
             public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
                 ViewGroup listItemView = (ViewGroup) getLayoutInflater().inflate(R.layout.activity_overview_simple_list_item_view,null);
+                Log.i("ViewLog", "Aufruf der View Elemente");
 
                 DataItem listItem = getItem(position);
-                ((TextView)listItemView.findViewById(R.id.itemNameInOvervoew)).setText(listItem.getName());
+                ((TextView)listItemView.findViewById(R.id.itemNameInOverview)).setText(listItem.getName());
 
                 setImageViewColor((ImageView)listItemView.findViewById(R.id.priorityIcon),listItem.getPrio());
-
+                ProgressBar progressbarOfEachElem= listItemView.findViewById(R.id.progressBarOfEachItem);
+                TextView progressText = listItemView.findViewById(R.id.progressTextOfEachItem);
+                ConstraintLayout listItemContainer = listItemView.findViewById(R.id.listItemContainer);
+                setTimersAndTextForEachListItem(listItemContainer,progressText,progressbarOfEachElem,listItemView,listItem);
                 ((CheckBox)listItemView.findViewById(R.id.itemChecked)).setChecked(listItem.isChecked());
                 ((CheckBox)listItemView.findViewById(R.id.itemChecked)).setOnCheckedChangeListener(
                         new CompoundButton.OnCheckedChangeListener() {
@@ -194,6 +203,48 @@ public class OverviewActivity extends AppCompatActivity {
 
     }
 
+    private void setTimersAndTextForEachListItem(ConstraintLayout listItemContainer,TextView progressText,ProgressBar progressBar, View listItemView, DataItem listItem) {
+        // Setze den Timer für dieses Element
+        long remainingTime = calculateRemainingTime(listItem); // Berechne die verbleibende Zeit
+        int maxProgress = 100; // Setze die maximale ProgressBar-Werte
+        long totalTime=calculateTotalTime(listItem);
+        progressBar.setMax(maxProgress);
+
+        new CountDownTimer(remainingTime, 10) {
+            private boolean firstTick = true;
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                //int progress = (int) ((millisUntilFinished * maxProgress) / remainingTime);
+                int progress = (int) Math.ceil((millisUntilFinished * 100.0) / totalTime);
+                Log.i("TimerLog","totalTime: "+totalTime);
+                Log.i("TimerLog","milis until finished: "+millisUntilFinished * 100.0);
+                if (firstTick) {
+                    // Erzwinge 100% beim Start
+                    progressBar.setProgress(100);
+                    progressText.setText("100%");
+                    firstTick = false;
+                    return;
+                }
+                progressBar.setProgress(progress);
+                progressText.setText(progress+"%");
+                //progressBar.setProgress(50);
+
+
+            }
+
+            @Override
+            public void onFinish() {
+                progressBar.setProgress(0);
+                //listItemContainer.setTextColor(ContextCompat.getColor(listItemView.getContext(), R.color.todo_text_expired));
+                listItemContainer.setEnabled(false);
+                listItemContainer.setBackgroundColor(
+                        listItemView.getContext().getResources().getColor(R.color.todo_text_expired)
+                );
+            }
+        }.start();
+    }
+
     private void startLoginActivity() {
         startActivity(new Intent(this, LoginActivity.class));
         finish();
@@ -251,6 +302,7 @@ public class OverviewActivity extends AppCompatActivity {
                     DataItem existingItemInList = listData.get(itemPosition);
                     existingItemInList.setName(itemFromDetailViewToBeModifiedInList.getName());
                     existingItemInList.setDescription(itemFromDetailViewToBeModifiedInList.getDescription());
+                    existingItemInList.setPrio(itemFromDetailViewToBeModifiedInList.getPrio());
 
                     existingItemInList.setChecked(itemFromDetailViewToBeModifiedInList.isChecked());
                     listviewAdapter.notifyDataSetChanged();
@@ -284,6 +336,35 @@ public class OverviewActivity extends AppCompatActivity {
         }
 
 
+    }
+
+    private long calculateRemainingTime(DataItem item) {
+        long currentTime = System.currentTimeMillis();
+        Log.i("timerlog", "Time: "+item.getTbdDate());
+        long endTime=0;
+        if(item.getTbdDate()!=null){
+            endTime = item.getTbdDate();
+        }
+        long remainingTime=Math.max(0, endTime - currentTime);
+        Log.i("timerlog", "Remaining Time: "+remainingTime);
+        return remainingTime;
+    }
+
+
+    private long calculateTotalTime(DataItem item) {
+        Log.i("TimerLog","Starttime: "+item.getStartTime());
+        Log.i("TimerLog","TBDtime: "+item.getTbdDate());
+        Date startTime = new Date(item.getStartTime());
+        Date tbdDate = new Date();
+
+        if(item.getTbdDate()!=null){
+            tbdDate = new Date(item.getTbdDate());
+        }
+
+        if (startTime != null && tbdDate != null) {
+            return tbdDate.getTime() - startTime.getTime(); // Dauer in Millisekunden
+        }
+        return 0;
     }
 
     private void showMessage(String message){

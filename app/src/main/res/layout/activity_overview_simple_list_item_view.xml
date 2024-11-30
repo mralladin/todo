@@ -2,7 +2,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
+    android:id="@+id/listItemContainer"
+    android:background="@color/todo_background_default"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 <CheckBox
     android:focusable="false"
@@ -14,7 +15,7 @@
     android:id="@+id/itemChecked"
     />
 <TextView
-    android:id="@+id/itemNameInOvervoew"
+    android:id="@+id/itemNameInOverview"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:textSize="30sp"
@@ -24,25 +25,49 @@
     app:layout_constraintTop_toTopOf="parent"
     >
 </TextView>
+    <!--<ProgressBar
+        android:id="@+id/progressBarOfEachItem"
+        android:layout_width="0dp"
+        android:layout_height="20dp"
+        android:indeterminate="false"
+        android:progressDrawable="@drawable/progress_bar_custom"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:max="100"
+        android:progress="100"
+        app:layout_constraintEnd_toStartOf="@id/priorityIcon"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+        -->
+
+    <include
+        android:id="@+id/progressBarContainer"
+        layout="@layout/progress_bar_with_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/priorityIcon"
+/>
+
+
     <ImageView
         android:id="@+id/priorityIcon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:contentDescription="Priority Icon"
         app:layout_constraintEnd_toStartOf="@+id/deleteButton"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:srcCompat="@drawable/baseline_star_24" />
+
     <Button
-        android:focusable="false"
         android:id="@+id/deleteButton"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
         android:drawableStart="@drawable/baseline_delete_24"
-    android:background="?attr/selectableItemBackground"
-    android:contentDescription="Delete"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintBottom_toBottomOf="parent" />
+        android:focusable="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_width="30dp"
+    />
     </androidx.constraintlayout.widget.ConstraintLayout>

@@ -58,6 +58,8 @@ public class DetailviewActivity extends AppCompatActivity {
         item = (DataItem) getIntent().getSerializableExtra(OverviewActivity.ARG_ITEM);
         if (item==null){
             item=new DataItem();
+            //Bei innitialier erstellung muss das Start Datum gesetzt werden
+            item.setStartTime(new Date().getTime());
         }
         Log.i("Debuger","item"+item);
         itemNameEditedText =  findViewById(R.id.itemName);
@@ -68,6 +70,7 @@ public class DetailviewActivity extends AppCompatActivity {
 
         prioritySpinner = findViewById(R.id.prioritySpinner);
         prioritySpinner.setSelection(item.getPrio());
+
 
 
         dateEditText = findViewById(R.id.dateEditText);

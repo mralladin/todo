@@ -23,7 +23,10 @@ public class DataItem implements Serializable {
     private String useridassigned;
     private int prio;
     @TypeConverters(DateConverter.class) // Verwende einen Converter für Room
+    //Wann das DataItem fertig ist
     private Long tbdDate;
+    //Wann das DataItem gestartet wurde
+    private Long startTime;
 
     public long getId() {
         return id;
@@ -114,5 +117,13 @@ public class DataItem implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hashCode(id);
+    }
+
+    public Long getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Long startTime) {
+        this.startTime = startTime;
     }
 }

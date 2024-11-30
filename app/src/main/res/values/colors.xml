@@ -7,4 +7,9 @@
     <color name="blue">#2196F3</color>
     <color name="orange">#FF9800</color>
     <color name="red">#F44336</color>
+
+    <color name="todo_background_default">#FFFFFF</color> <!-- Weiß -->
+    <color name="todo_background_expired">#D3D3D3</color> <!-- Hellgrau -->
+    <color name="todo_text_default">#000000</color> <!-- Schwarz -->
+    <color name="todo_text_expired">#6D6D6D</color> <!-- Dunkelgrau -->
 </resources>
