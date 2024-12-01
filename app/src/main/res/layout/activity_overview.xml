@@ -22,28 +22,46 @@ xmlns:android="http://schemas.android.com/apk/res/android"
             android:background="?attr/colorPrimary"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" >
 
+            <ImageView
+                android:id="@+id/connection_status"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_margin="8dp"
+                android:layout_gravity="left"
 
+                android:src="@drawable/baseline_cloud_24" />
             <!-- Zusätzlicher TextView -->
             <TextView
-                android:id="@+id/toolbar_title"
+                android:id="@+id/userNameTextview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="MrZalald"
                 android:textColor="@android:color/holo_blue_bright"
-                android:textSize="12sp" />
+                android:textSize="11sp" />
 
             <ImageButton
                 android:focusable="false"
-
                 android:id="@+id/toolbar_button"
                 android:layout_width="wrap_content"
                 android:layout_height="35dp"
                 android:layout_gravity="end"
                 android:paddingEnd="10dp"
+
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/logout_24dp"
-                android:contentDescription="Button" />
+                android:src="@drawable/baseline_logout_24"/>
+            <ImageButton
+                android:focusable="false"
+                android:id="@+id/friends"
+                android:layout_width="wrap_content"
+                android:layout_height="35dp"
+                android:layout_gravity="end"
+                android:paddingEnd="10dp"
+
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/baseline_people_24"/>
+
+
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout

@@ -5,14 +5,55 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+
+    <EditText
+        android:id="@+id/input_email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="E-Mail"
+        android:inputType="textEmailAddress" />
+    <!-- Username vielleicht später?
+    <EditText
+        android:id="@+id/input_username"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Benutzername"
+        android:inputType="text" /> -->
+    <!-- Input für das Passwort -->
+    <EditText
+        android:id="@+id/input_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Passwort"
+        android:inputType="textPassword" />
+
+    <!-- Button zum Registrieren -->
+    <Button
+        android:id="@+id/btn_register"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Registrieren" />
+
+    <!-- Button zum Anmelden -->
+    <Button
+        android:id="@+id/btn_login"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Anmelden" />
+
+    <!-- Progress Bar -->
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+    <!--
     <EditText
         android:id="@+id/input_phone_number"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Handynummer"
         android:inputType="phone" />
-
-
 
     <Button
         android:id="@+id/btn_send_code"
@@ -47,4 +88,5 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone" />
+        -->
 </LinearLayout>

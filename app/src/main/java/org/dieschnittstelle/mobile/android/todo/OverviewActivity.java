@@ -2,8 +2,9 @@ package org.dieschnittstelle.mobile.android.todo;
 
 import static java.lang.String.format;
 
-import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
@@ -17,19 +18,23 @@ import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
+import androidx.core.widget.ImageViewCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.dieschnittstelle.mobile.android.skeleton.R;
 import org.dieschnittstelle.mobile.android.todo.model.DataItem;
@@ -40,6 +45,7 @@ import org.dieschnittstelle.mobile.android.todo.security.AuthManager;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class OverviewActivity extends AppCompatActivity {
 
@@ -48,7 +54,9 @@ public class OverviewActivity extends AppCompatActivity {
     private ArrayAdapter<DataItem> listviewAdapter;
     public static String ARG_ITEM="item";
     private SwipeRefreshLayout swipeRefreshLayout;
+    private boolean isOnline=false;
 
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     protected final int REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_EDIT = 1;
     protected final int REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_CREATE = 2;
@@ -60,9 +68,10 @@ public class OverviewActivity extends AppCompatActivity {
         AuthManager authManager = new AuthManager();
         setContentView(R.layout.activity_overview);
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
+        monitorConnectionStatus();
 
 
-
+        if(isOnline){
         if (authManager.getCurrentUser() == null) {
             // Kein Benutzer angemeldet -> zur Login-Seite weiterleiten
             startLoginActivity();
@@ -70,8 +79,9 @@ public class OverviewActivity extends AppCompatActivity {
         } else {
             // Benutzer ist angemeldet -> App normal starten
             Toast.makeText(this, "Willkommen, " + authManager.getCurrentUser().getEmail(), Toast.LENGTH_SHORT).show();
+            ((TextView)(findViewById(R.id.userNameTextview))).setText(authManager.getCurrentUser().getEmail());
         }
-
+        }
 
 
 
@@ -91,7 +101,7 @@ public class OverviewActivity extends AppCompatActivity {
 
 // Optional: Überprüfen, ob getSupportActionBar() null ist
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("Meine App");
+            getSupportActionBar().setTitle("ToDo's");
         }
         if (getSupportActionBar() == null) {
             Log.e("ToolbarError", "SupportActionBar konnte nicht initialisiert werden");
@@ -133,6 +143,8 @@ public class OverviewActivity extends AppCompatActivity {
                         }
                 );
 
+
+
                 //DELETE
                 // Delete-Button Klick-Listener
                 Button deleteButton = listItemView.findViewById(R.id.deleteButton);
@@ -158,7 +170,11 @@ public class OverviewActivity extends AppCompatActivity {
         };
 
         listView.setAdapter(listviewAdapter);
-
+        listView.setOnItemLongClickListener((adapterView, view, position, id) -> {
+            // Zeige das Kontextmenü
+            showPopupMenu(view, position);
+            return true; // Rückgabe true, um den langen Klick zu konsumieren
+        });
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -202,7 +218,102 @@ public class OverviewActivity extends AppCompatActivity {
 
 
     }
+    private void showPopupMenu(View anchorView, int position) {
+        PopupMenu popupMenu = new PopupMenu(this, anchorView);
+        popupMenu.getMenuInflater().inflate(R.menu.context_menu, popupMenu.getMenu());
 
+        // Aktionen für Menüeinträge
+        popupMenu.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.action_change_prio:
+                    changePriority(position);
+                    return true;
+                case R.id.action_delete:
+                    deleteItem(position);
+                    return true;
+                case R.id.action_share:
+                   // shareItem(position);
+                    return true;
+                default:
+                    return false;
+            }
+        });
+
+        // Menü anzeigen
+        popupMenu.show();
+    }
+
+    private void changePriority(int position) {
+        // Optionen für die Priorität
+        String[] priorities = {"Niedrig", "Mittel", "Hoch", "Sehr hoch"};
+        int[] selectedPriority = {0}; // Standardauswahl (Niedrig)
+        DataItem listItem = listData.get(position);
+        AtomicInteger currentPriority = new AtomicInteger(listItem.getPrio());
+
+        // Dialog erstellen
+        new AlertDialog.Builder(this)
+                .setTitle("Priorität auswählen")
+                .setSingleChoiceItems(priorities, currentPriority.get(), (dialog, which) -> {
+                    // Temporäre Auswahl speichern
+                    currentPriority.set(which);
+                })
+                .setPositiveButton("OK", (dialog, which) -> {
+
+
+                    // Priorität dem Element zuweisen
+                    String newPriority = priorities[selectedPriority[0]];
+
+                    listItem.setPrio(currentPriority.get());
+
+                    listviewAdapter.notifyDataSetChanged(); // Adapter aktualisieren
+                    new Thread(() -> {
+                        // Element aus der Datenbank entfernen
+                        crudOperations.updateDataItem(listItem);
+
+                        // Element aus der lokalen Liste entfernen
+                        runOnUiThread(() -> {
+                            listviewAdapter.notifyDataSetChanged(); // Adapter aktualisieren
+
+                            Toast.makeText(this, "Priorität auf " + newPriority + " gesetzt", Toast.LENGTH_SHORT).show();
+                        });
+                    }).start();
+
+                })
+                .setNegativeButton("Abbrechen", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+
+    private void deleteItem(int position) {
+        // Dialog zur Bestätigung anzeigen
+        new AlertDialog.Builder(this)
+                .setTitle("Löschen bestätigen")
+                .setMessage("Möchten Sie dieses Element wirklich löschen?")
+                .setPositiveButton("Ja", (dialog, which) -> {
+                    // Element aus der Liste entfernen
+                    listviewAdapter.notifyDataSetChanged();
+                    new Thread(() -> {
+                        // Element aus der Datenbank entfernen
+                        DataItem listItem = listData.get(position);
+
+                        crudOperations.deleteDataItem(listItem.getId());
+
+                        // Element aus der lokalen Liste entfernen
+                        runOnUiThread(() -> {
+                            listData.remove(position);
+                            listviewAdapter.notifyDataSetChanged();
+                            Toast.makeText(OverviewActivity.this, listItem.getName() + " gelöscht", Toast.LENGTH_SHORT).show();
+                        });
+                    }).start();
+
+                    Toast.makeText(this, "Element gelöscht", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Abbrechen", (dialog, which) -> {
+                    // Abbrechen, nichts tun
+                    dialog.dismiss();
+                })
+                .show();
+    }
     private void setTimersAndTextForEachListItem(ConstraintLayout listItemContainer,TextView progressText,ProgressBar progressBar, View listItemView, DataItem listItem) {
         // Setze den Timer für dieses Element
         long remainingTime = calculateRemainingTime(listItem); // Berechne die verbleibende Zeit
@@ -236,6 +347,7 @@ public class OverviewActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 progressBar.setProgress(0);
+                progressText.setText(R.string.finish);
                 //listItemContainer.setTextColor(ContextCompat.getColor(listItemView.getContext(), R.color.todo_text_expired));
                 listItemContainer.setEnabled(false);
                 listItemContainer.setBackgroundColor(
@@ -290,7 +402,7 @@ public class OverviewActivity extends AppCompatActivity {
 
                 DataItem itemFromDetailViewToBeModifiedInList =(DataItem) data.getSerializableExtra(ARG_ITEM);
                 //CALL CRUD
-                Log.i("TestLog5","l: "+itemFromDetailViewToBeModifiedInList);
+                Log.i("TestLog5","l: "+itemFromDetailViewToBeModifiedInList.getTbdDate());
                 Log.i("TestLog5",ARG_ITEM);
 
                 boolean updated = this.crudOperations.updateDataItem(itemFromDetailViewToBeModifiedInList);
@@ -348,6 +460,27 @@ public class OverviewActivity extends AppCompatActivity {
         long remainingTime=Math.max(0, endTime - currentTime);
         Log.i("timerlog", "Remaining Time: "+remainingTime);
         return remainingTime;
+    }
+    private void monitorConnectionStatus() {
+        db.collection("dataitems").document("dataitems")
+            .addSnapshotListener((snapshot, error) -> {
+                if (error != null) {
+                    updateCloudStatus(false); // Kein Zugriff -> Nicht verbunden
+                } else {
+                    isOnline=true;
+                    updateCloudStatus(true); // Verbunden
+                }
+            });
+
+    }
+    private void updateCloudStatus(boolean isConnected) {
+        ImageView cloudStatus = findViewById(R.id.connection_status);
+        Log.i("cloudStatusLog","connected? "+isConnected);
+        if (isConnected) {
+            cloudStatus.setColorFilter(Color.GREEN);
+        } else {
+            cloudStatus.setColorFilter(Color.RED);
+        }
     }
 
 

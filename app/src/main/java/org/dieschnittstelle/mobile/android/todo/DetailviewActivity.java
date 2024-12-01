@@ -98,12 +98,15 @@ public class DetailviewActivity extends AppCompatActivity {
         item.setName(itemNameEditedText.getText().toString());
         item.setChecked(itemCheckbox.isChecked());
         item.setDescription(description.getText().toString());
+        parseDateString(dateEditText.getText().toString());
         item.setTbdDate(tbdTimestamp);
         item.setPrio(prioritySpinner.getSelectedItemPosition());
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             item.setUseridcreated(user.getUid());
         }
+        Log.e("TestLog5","datestring: "+dateEditText.toString());
+
         returnIntent.putExtra(OverviewActivity.ARG_ITEM,item);
         Log.e("TestLog","Hello: "+R.id.dateAsText);
         this.setResult(DetailviewActivity.RESULT_OK,returnIntent);
@@ -120,15 +123,18 @@ public class DetailviewActivity extends AppCompatActivity {
 
     private void parseDateString(String dateString){
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+        Log.e("datestrin in parse ",dateString);
 
         try {
             // String in Date konvertieren
             tbdDate = dateFormat.parse(dateString);
+            Log.e("TestLog5","I reach this");
 
             // Date in Millisekunden umwandeln
             tbdTimestamp = tbdDate.getTime();
 
         } catch (ParseException e) {
+
             e.printStackTrace();
         }
     }
