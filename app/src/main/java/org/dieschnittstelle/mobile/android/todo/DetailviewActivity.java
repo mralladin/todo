@@ -3,6 +3,7 @@ package org.dieschnittstelle.mobile.android.todo;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -13,6 +14,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -20,6 +22,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import org.dieschnittstelle.mobile.android.skeleton.R;
+import org.dieschnittstelle.mobile.android.skeleton.databinding.ActivityDetailviewBinding;
 import org.dieschnittstelle.mobile.android.todo.model.DataItem;
 import org.dieschnittstelle.mobile.android.todo.widgets.DatePickerActivity;
 
@@ -30,14 +33,13 @@ import java.util.Date;
 
 public class DetailviewActivity extends AppCompatActivity {
 
+
+    private ActivityDetailviewBinding binding;
+
     protected static final String LOG_TAG = DetailviewActivity.class.getName();
     private TextInputEditText dateEditText;
-    private FloatingActionButton saveButton;
     private String selectedDate;
     private Long tbdTimestamp;
-    private EditText itemNameEditedText;
-    private CheckBox itemCheckbox;
-    private TextView description;
     private int prioValue=0;
     private Date tbdDate;
     private Spinner prioritySpinner;
@@ -46,14 +48,13 @@ public class DetailviewActivity extends AppCompatActivity {
     }
     DataItem item;
 
+    public DataItem getItem() {
+        return item;
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
-
-        //View setzten weist das layout zu für diese activitiy
-        setContentView(R.layout.activity_detailview);
 
         item = (DataItem) getIntent().getSerializableExtra(OverviewActivity.ARG_ITEM);
         if (item==null){
@@ -61,43 +62,24 @@ public class DetailviewActivity extends AppCompatActivity {
             //Bei innitialier erstellung muss das Start Datum gesetzt werden
             item.setStartTime(new Date().getTime());
         }
-        Log.i("Debuger","item"+item);
-        itemNameEditedText =  findViewById(R.id.itemName);
-        itemNameEditedText.setText(item.getName());
 
-        itemCheckbox =  findViewById(R.id.itemchecked);
-        itemCheckbox.setChecked(item.isChecked());
+        // Controller und Item mit Binding verknüpfen
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_detailview);
+        binding.setController(this);
+
+
+        Log.i("Debuger","item"+item);
 
         prioritySpinner = findViewById(R.id.prioritySpinner);
         prioritySpinner.setSelection(item.getPrio());
 
-
-
         dateEditText = findViewById(R.id.dateEditText);
         dateEditText.setText(getFormatesDateStringFromLong(item.getTbdDate()));
 
-        saveButton = findViewById(R.id.saveButton);
-
-        description = findViewById(R.id.itemDescription);
-        description.setText(item.getDescription());
-
-        saveButton.setOnClickListener(view -> {
-            saveItem();
-        });
-
-        dateEditText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDatePicker();
-            }
-        });
     }
 
-    private void saveItem() {
+    public void saveItem() {
         Intent returnIntent = new Intent();
-        item.setName(itemNameEditedText.getText().toString());
-        item.setChecked(itemCheckbox.isChecked());
-        item.setDescription(description.getText().toString());
         parseDateString(dateEditText.getText().toString());
         item.setTbdDate(tbdTimestamp);
         item.setPrio(prioritySpinner.getSelectedItemPosition());
@@ -105,7 +87,6 @@ public class DetailviewActivity extends AppCompatActivity {
         if (user != null) {
             item.setUseridcreated(user.getUid());
         }
-        Log.e("TestLog5","datestring: "+dateEditText.toString());
 
         returnIntent.putExtra(OverviewActivity.ARG_ITEM,item);
         Log.e("TestLog","Hello: "+R.id.dateAsText);
@@ -113,7 +94,7 @@ public class DetailviewActivity extends AppCompatActivity {
         this.finish();
     }
 
-    private void showDatePicker() {
+    public void showDatePicker() {
         Log.i(LOG_TAG,"oncreate called");
         Intent intent = new Intent(DetailviewActivity.this,
                 DatePickerActivity.class);

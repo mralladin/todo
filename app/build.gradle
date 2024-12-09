@@ -3,6 +3,15 @@ apply plugin: 'com.google.gms.google-services'
 
 android {
     compileSdk 34
+    viewBinding {
+        enabled = true
+    }
+    dataBinding {
+        enabled = true
+    }
+    buildFeatures {
+        dataBinding true
+    }
     signingConfigs {
         debug {
             storeFile file(System.getProperty("user.home") + "/.android/debug.keystore") // Standardpfad für Debug-Keystore
@@ -34,9 +43,6 @@ android {
             signingConfig signingConfigs.debug
         }
     }
-    dataBinding {
-        enabled = true
-    }
     compileOptions {
         sourceCompatibility "11"
         targetCompatibility "11"
@@ -45,6 +51,7 @@ android {
 }
 
 dependencies {
+    implementation("com.google.android.gms:play-services-base:18.2.0")
     implementation 'com.google.ar.sceneform:filament-android:1.17.1'
     implementation("com.google.android.material:material:1.12.0")
     implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
@@ -52,6 +59,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation 'com.google.firebase:firebase-inappmessaging:21.0.1'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-android:2.8.7'
     def room_version = "2.6.1"
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])

@@ -9,9 +9,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="org.dieschnittstelle.mobile.android.skeleton" />
-                  <option name="mobileSdkAppId" value="1:970546450942:android:ee3f26e91f7de0cb3870af" />
-                  <option name="projectId" value="dieschnittstelle-mad-todos" />
-                  <option name="projectNumber" value="970546450942" />
+                  <option name="mobileSdkAppId" value="1:214047323825:android:9b785859d23c9bb3f8d490" />
+                  <option name="projectId" value="todoapp-4cb79" />
+                  <option name="projectNumber" value="214047323825" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

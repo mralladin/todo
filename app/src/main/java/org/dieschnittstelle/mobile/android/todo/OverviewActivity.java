@@ -3,7 +3,6 @@ package org.dieschnittstelle.mobile.android.todo;
 import static java.lang.String.format;
 
 import android.content.Intent;
-import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -13,8 +12,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -30,31 +27,35 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
-import androidx.core.widget.ImageViewCompat;
+import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.dieschnittstelle.mobile.android.skeleton.R;
+import org.dieschnittstelle.mobile.android.skeleton.databinding.ActivityOverviewStructuredListitemViewBinding;
 import org.dieschnittstelle.mobile.android.todo.model.DataItem;
 import org.dieschnittstelle.mobile.android.todo.model.IDataItemCRUDOperations;
 import org.dieschnittstelle.mobile.android.todo.model.LocalItemCRUDOperationsWithRoom;
 import org.dieschnittstelle.mobile.android.todo.security.AuthManager;
+import org.dieschnittstelle.mobile.android.todo.viewmodel.OverviewViewModel;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class OverviewActivity extends AppCompatActivity {
 
     private ListView listView;
-    private List<DataItem> listData=new ArrayList<>();
     private ArrayAdapter<DataItem> listviewAdapter;
     public static String ARG_ITEM="item";
     private SwipeRefreshLayout swipeRefreshLayout;
     private boolean isOnline=false;
+    private OverviewViewModel viewmodel;
+    private static String LOG_TAG = "OverviewActivity";
+
+
 
     FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -65,24 +66,53 @@ public class OverviewActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         AuthManager authManager = new AuthManager();
         setContentView(R.layout.activity_overview);
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         monitorConnectionStatus();
 
+        crudOperations=new LocalItemCRUDOperationsWithRoom(this);
+        Log.i("CrudOps","1"+crudOperations);
 
-        if(isOnline){
-        if (authManager.getCurrentUser() == null) {
-            // Kein Benutzer angemeldet -> zur Login-Seite weiterleiten
-            startLoginActivity();
+        viewmodel = new ViewModelProvider(this).get(OverviewViewModel.class);
 
-        } else {
-            // Benutzer ist angemeldet -> App normal starten
-            Toast.makeText(this, "Willkommen, " + authManager.getCurrentUser().getEmail(), Toast.LENGTH_SHORT).show();
-            ((TextView)(findViewById(R.id.userNameTextview))).setText(authManager.getCurrentUser().getEmail());
+
+        viewmodel.setCrudOperations(crudOperations);
+
+        progressBar = findViewById(R.id.progressbar);
+
+
+        viewmodel.getProcessingState().observe(this, processingState -> {
+            Log.i("TestLog2","observe processing state"+processingState);
+            if(processingState == OverviewViewModel.ProcessingState.RUNNING_LONG){
+                this.progressBar.setVisibility(View.VISIBLE);
+            }else if(processingState == OverviewViewModel.ProcessingState.DONE){
+                this.progressBar.setVisibility(View.GONE);
+                this.listviewAdapter.notifyDataSetChanged();
+             };
+
+        });
+
+        //if(isOnline) {
+
+            if (authManager.getCurrentUser() == null) {
+                // Kein Benutzer angemeldet -> zur Login-Seite weiterleiten
+                startLoginActivity();
+
+            } else {
+                // Benutzer ist angemeldet -> App normal starten
+                Toast.makeText(this, "Willkommen, " + authManager.getCurrentUser().getEmail(), Toast.LENGTH_SHORT).show();
+                ((TextView) (findViewById(R.id.userNameTextview))).setText(authManager.getCurrentUser().getEmail());
+            }
+        //}
+
+        if(!viewmodel.isInitialised()) {
+            Log.i(LOG_TAG,"load data to be shown in list view...");
+            Log.i("TestLog2","load data to be shown in list view...");
+            viewmodel.readAllDataItems();
+            viewmodel.setInitialised(true);
         }
-        }
-
 
 
 
@@ -115,48 +145,56 @@ public class OverviewActivity extends AppCompatActivity {
 
         listView=findViewById(R.id.listview);
 
-        this.crudOperations=new LocalItemCRUDOperationsWithRoom(this);
 
-        listviewAdapter= new ArrayAdapter<>(this,R.layout.activity_overview_simple_list_item_view,listData){
+
+        listviewAdapter= new ArrayAdapter<>(this,R.layout.activity_overview_structured_listitem_view,viewmodel.getDataItems()){
 
             @NonNull
             @Override
-            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                ViewGroup listItemView = (ViewGroup) getLayoutInflater().inflate(R.layout.activity_overview_simple_list_item_view,null);
+            public View getView(int position, @Nullable View recyclableListItemView, @NonNull ViewGroup parent) {
+                Log.i(LOG_TAG, "getView() for position: "+position);
+                ActivityOverviewStructuredListitemViewBinding binding;
+                View listItemView=null;
+                DataItem listItem = getItem(position);
+
+
+                //If now view can be recycled we need to create a new one
+                if(recyclableListItemView == null) {
+                    binding = DataBindingUtil.inflate(getLayoutInflater(),R.layout.activity_overview_structured_listitem_view,null,false);
+                    listItemView = binding.getRoot();
+                    listItemView.setTag(binding);
+                 }
+                else {
+                    listItemView = recyclableListItemView;
+                    binding = (ActivityOverviewStructuredListitemViewBinding) listItemView.getTag();
+                }
+
+                binding.setItem(listItem);
+
+
+
                 Log.i("ViewLog", "Aufruf der View Elemente");
 
-                DataItem listItem = getItem(position);
-                ((TextView)listItemView.findViewById(R.id.itemNameInOverview)).setText(listItem.getName());
+
 
                 setImageViewColor((ImageView)listItemView.findViewById(R.id.priorityIcon),listItem.getPrio());
                 ProgressBar progressbarOfEachElem= listItemView.findViewById(R.id.progressBarOfEachItem);
                 TextView progressText = listItemView.findViewById(R.id.progressTextOfEachItem);
                 ConstraintLayout listItemContainer = listItemView.findViewById(R.id.listItemContainer);
                 setTimersAndTextForEachListItem(listItemContainer,progressText,progressbarOfEachElem,listItemView,listItem);
-                ((CheckBox)listItemView.findViewById(R.id.itemChecked)).setChecked(listItem.isChecked());
-                ((CheckBox)listItemView.findViewById(R.id.itemChecked)).setOnCheckedChangeListener(
-                        new CompoundButton.OnCheckedChangeListener() {
-                            @Override
-                            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                                listItem.setChecked(isChecked);
-                            }
-                        }
-                );
 
-
-
-                //DELETE
                 // Delete-Button Klick-Listener
                 Button deleteButton = listItemView.findViewById(R.id.deleteButton);
                 deleteButton.setOnClickListener(v -> {
+                    viewmodel.getProcessingState().setValue(OverviewViewModel.ProcessingState.RUNNING_LONG);
                     new Thread(() -> {
                         // Element aus der Datenbank entfernen
                         crudOperations.deleteDataItem(listItem.getId());
 
                         // Element aus der lokalen Liste entfernen
                         runOnUiThread(() -> {
-                            listData.remove(position);
-                            notifyDataSetChanged();
+                            viewmodel.getDataItems().remove(position);
+                            viewmodel.getProcessingState().postValue(OverviewViewModel.ProcessingState.DONE);
                             Toast.makeText(OverviewActivity.this, listItem.getName() + " gelöscht", Toast.LENGTH_SHORT).show();
                         });
                     }).start();
@@ -191,30 +229,8 @@ public class OverviewActivity extends AppCompatActivity {
 
         });
 
-        progressBar = findViewById(R.id.progressbar);
-        this.progressBar.setVisibility(View.VISIBLE);
-
-        new Thread(() -> {
-
-            //Data to be shown
-            List<DataItem> items = null;
-
-            try {
-                items = this.crudOperations.readAllDataItems();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-
-            this.listData.addAll(items);
-
-            runOnUiThread(()->{
-                this.progressBar.setVisibility(View.GONE);
-
-                listviewAdapter.notifyDataSetChanged();
-                    });
 
 
-        }).start();
 
 
     }
@@ -247,7 +263,9 @@ public class OverviewActivity extends AppCompatActivity {
         // Optionen für die Priorität
         String[] priorities = {"Niedrig", "Mittel", "Hoch", "Sehr hoch"};
         int[] selectedPriority = {0}; // Standardauswahl (Niedrig)
-        DataItem listItem = listData.get(position);
+        DataItem listItem = viewmodel.getDataItems().get(position);
+        Log.i("TestLog","position "+position);
+        Log.i("TestLog","item "+listItem);
         AtomicInteger currentPriority = new AtomicInteger(listItem.getPrio());
 
         // Dialog erstellen
@@ -258,26 +276,8 @@ public class OverviewActivity extends AppCompatActivity {
                     currentPriority.set(which);
                 })
                 .setPositiveButton("OK", (dialog, which) -> {
-
-
-                    // Priorität dem Element zuweisen
-                    String newPriority = priorities[selectedPriority[0]];
-
                     listItem.setPrio(currentPriority.get());
-
-                    listviewAdapter.notifyDataSetChanged(); // Adapter aktualisieren
-                    new Thread(() -> {
-                        // Element aus der Datenbank entfernen
-                        crudOperations.updateDataItem(listItem);
-
-                        // Element aus der lokalen Liste entfernen
-                        runOnUiThread(() -> {
-                            listviewAdapter.notifyDataSetChanged(); // Adapter aktualisieren
-
-                            Toast.makeText(this, "Priorität auf " + newPriority + " gesetzt", Toast.LENGTH_SHORT).show();
-                        });
-                    }).start();
-
+                    viewmodel.updateDataItem(listItem);
                 })
                 .setNegativeButton("Abbrechen", (dialog, which) -> dialog.dismiss())
                 .show();
@@ -294,13 +294,14 @@ public class OverviewActivity extends AppCompatActivity {
                     listviewAdapter.notifyDataSetChanged();
                     new Thread(() -> {
                         // Element aus der Datenbank entfernen
-                        DataItem listItem = listData.get(position);
-
+                        DataItem listItem = viewmodel.getDataItems().get(position);
+                        Log.e("DeleteLog","listItem.getId(): "+listItem.getId()+"   "+crudOperations );
                         crudOperations.deleteDataItem(listItem.getId());
+
 
                         // Element aus der lokalen Liste entfernen
                         runOnUiThread(() -> {
-                            listData.remove(position);
+                            viewmodel.getDataItems().remove(position);
                             listviewAdapter.notifyDataSetChanged();
                             Toast.makeText(OverviewActivity.this, listItem.getName() + " gelöscht", Toast.LENGTH_SHORT).show();
                         });
@@ -401,24 +402,13 @@ public class OverviewActivity extends AppCompatActivity {
                 Log.i("TestLog",ARG_ITEM);
 
                 DataItem itemFromDetailViewToBeModifiedInList =(DataItem) data.getSerializableExtra(ARG_ITEM);
+
+                viewmodel.updateDataItem(itemFromDetailViewToBeModifiedInList);
                 //CALL CRUD
                 Log.i("TestLog5","l: "+itemFromDetailViewToBeModifiedInList.getTbdDate());
                 Log.i("TestLog5",ARG_ITEM);
 
-                boolean updated = this.crudOperations.updateDataItem(itemFromDetailViewToBeModifiedInList);
 
-                if(updated) {
-                    //showMessage(getString(R.string.on_result_from_detailview_msg) + itemFromDetailViewToBeModifiedInList.getName());
-                    int itemPosition = listData.indexOf(itemFromDetailViewToBeModifiedInList);
-
-                    DataItem existingItemInList = listData.get(itemPosition);
-                    existingItemInList.setName(itemFromDetailViewToBeModifiedInList.getName());
-                    existingItemInList.setDescription(itemFromDetailViewToBeModifiedInList.getDescription());
-                    existingItemInList.setPrio(itemFromDetailViewToBeModifiedInList.getPrio());
-
-                    existingItemInList.setChecked(itemFromDetailViewToBeModifiedInList.isChecked());
-                    listviewAdapter.notifyDataSetChanged();
-                }
             }
             else {
                 showMessage("no results");
@@ -428,16 +418,7 @@ public class OverviewActivity extends AppCompatActivity {
             if(resultCode == OverviewActivity.RESULT_OK){
                 DataItem itemToBeCreated = (DataItem) data.getSerializableExtra(ARG_ITEM);
                // listviewAdapter.add(itemToBeCreated);
-                new Thread(()->{
-                    DataItem createdItem = this.crudOperations.createDataItem(itemToBeCreated);
-
-                    listData.add(createdItem);
-                    runOnUiThread(()->{
-                        listviewAdapter.notifyDataSetChanged();
-
-                    });
-
-                }).start();;
+                viewmodel.createDataItem(itemToBeCreated);
 
             }
         }
@@ -469,10 +450,15 @@ public class OverviewActivity extends AppCompatActivity {
                 } else {
                     isOnline=true;
                     updateCloudStatus(true); // Verbunden
+                    setUserName();
                 }
             });
 
     }
+
+    private void setUserName() {
+    }
+
     private void updateCloudStatus(boolean isConnected) {
         ImageView cloudStatus = findViewById(R.id.connection_status);
         Log.i("cloudStatusLog","connected? "+isConnected);
@@ -502,5 +488,13 @@ public class OverviewActivity extends AppCompatActivity {
 
     private void showMessage(String message){
          Toast.makeText(OverviewActivity.this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(LOG_TAG,"ondestry");
+        viewmodel.setCrudOperations(null);
+
     }
 }

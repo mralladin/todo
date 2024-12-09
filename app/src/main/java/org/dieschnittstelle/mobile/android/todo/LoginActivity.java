@@ -47,7 +47,7 @@ public class LoginActivity extends AppCompatActivity {
     private void handleRegister() {
         String email = inputEmail.getText().toString().trim();
         String password = inputPassword.getText().toString().trim();
-        String username = inputUsername.getText().toString().trim();
+        //String username = inputUsername.getText().toString().trim();
 
         if (!isValidEmail(email)) {
             inputEmail.setError("Ungültige E-Mail-Adresse");
@@ -59,39 +59,43 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        if (TextUtils.isEmpty(username)) {
+        /*if (TextUtils.isEmpty(username)) {
             inputUsername.setError("Benutzername darf nicht leer sein");
             return;
-        }
+        }*/
 
         progressBar.setVisibility(View.VISIBLE);
-
-        checkUsernameAvailability(username, isAvailable -> {
+        registerUser(email, password);
+       /* checkUsernameAvailability(username, isAvailable -> {
             if (isAvailable) {
+                registerUser(email, password);
                 // Benutzer registrieren
-                auth.createUserWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(task -> {
-                            progressBar.setVisibility(View.GONE);
-                            if (task.isSuccessful()) {
-                                // Benutzer erfolgreich registriert
-                                FirebaseUser user = auth.getCurrentUser();
-                                Toast.makeText(LoginActivity.this, "Registrierung erfolgreich!", Toast.LENGTH_SHORT).show();
 
-                                // Weiterleitung zur nächsten Activity
-                                Intent intent = new Intent(LoginActivity.this, OverviewActivity.class);
-                                intent.putExtra("username", username);
-                                startActivity(intent);
-                                finish();
-                            } else {
-                                // Registrierung fehlgeschlagen
-                                Toast.makeText(LoginActivity.this, "Registrierung fehlgeschlagen: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                            }
-                        });
             } else {
                 progressBar.setVisibility(View.GONE);
                 inputUsername.setError("Dieser Benutzername ist bereits vergeben");
             }
-        });
+        })*/;
+    }
+
+    private void registerUser(String email, String password) {
+        auth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(task -> {
+                    progressBar.setVisibility(View.GONE);
+                    if (task.isSuccessful()) {
+                        // Benutzer erfolgreich registriert
+                        FirebaseUser user = auth.getCurrentUser();
+                        Toast.makeText(LoginActivity.this, "Registrierung erfolgreich!", Toast.LENGTH_SHORT).show();
+
+                        // Weiterleitung zur nächsten Activity
+                        Intent intent = new Intent(LoginActivity.this, OverviewActivity.class);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        // Registrierung fehlgeschlagen
+                        Toast.makeText(LoginActivity.this, "Registrierung fehlgeschlagen: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void handleLogin() {

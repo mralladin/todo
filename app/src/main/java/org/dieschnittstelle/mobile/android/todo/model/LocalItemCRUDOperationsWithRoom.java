@@ -1,6 +1,7 @@
 package org.dieschnittstelle.mobile.android.todo.model;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.room.Dao;
 import androidx.room.Database;
@@ -43,7 +44,7 @@ public class LocalItemCRUDOperationsWithRoom implements IDataItemCRUDOperations{
         public abstract SQLiteDataItemCRUDOperations getDao();
     }
 
-
+    public static String LOG_TAG = "DATA_ITEMS";
     private SQLiteDataItemCRUDOperations localDao;
     private FirebaseFirestore firestore;
 
@@ -80,7 +81,11 @@ public class LocalItemCRUDOperationsWithRoom implements IDataItemCRUDOperations{
     @Override
     public List<DataItem> readAllDataItems() {
         // Zuerst lokale Daten laden
-        return localDao.readAllItems();
+        List<DataItem> localItems = localDao.readAllItems();
+        localItems.forEach(dataItem ->
+                        Log.i(LOG_TAG,"Get DataItem: "+dataItem.getId()+" DataItem Name:"+dataItem.getName())
+                );
+        return localItems;
     }
 
     @Override
@@ -92,16 +97,11 @@ public class LocalItemCRUDOperationsWithRoom implements IDataItemCRUDOperations{
     @Override
     public Boolean updateDataItem(DataItem item) {
         // Update in Room
-       new Thread(() ->
-       {
            localDao.updateItem(item);
            // Update in Firestore
            firestore.collection("dataitems")
                    .document(String.valueOf(item.getId()))
                    .set(item);
-
-       }
-               ).start();
         return true;
     }
 

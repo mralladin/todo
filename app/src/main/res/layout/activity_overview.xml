@@ -1,33 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
-
-xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="org.dieschnittstelle.mobile.android.todo.OverviewActivity">
 
     <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/custombar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-    android:id="@+id/custombar"
-        >
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" >
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
             <ImageView
                 android:id="@+id/connection_status"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                android:layout_margin="8dp"
                 android:layout_gravity="left"
+                android:layout_margin="8dp"
 
                 android:src="@drawable/baseline_cloud_24" />
             <!-- Zusätzlicher TextView -->
@@ -41,48 +39,48 @@ xmlns:android="http://schemas.android.com/apk/res/android"
                 android:textSize="11sp" />
 
             <ImageButton
-                android:focusable="false"
                 android:id="@+id/toolbar_button"
                 android:layout_width="wrap_content"
                 android:layout_height="35dp"
                 android:layout_gravity="end"
-                android:paddingEnd="10dp"
-
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/baseline_logout_24"/>
-            <ImageButton
                 android:focusable="false"
+                android:paddingEnd="10dp"
+                android:src="@drawable/baseline_logout_24" />
+
+            <ImageButton
                 android:id="@+id/friends"
                 android:layout_width="wrap_content"
                 android:layout_height="35dp"
                 android:layout_gravity="end"
-                android:paddingEnd="10dp"
-
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/baseline_people_24"/>
+                android:focusable="false"
+                android:paddingEnd="10dp"
+                android:src="@drawable/baseline_people_24" />
 
 
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/custombar">
 
         <ListView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
             android:id="@+id/listview"
-            app:layout_constraintTop_toBottomOf="@+id/custombar"
-            />
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <ProgressBar
+        android:id="@+id/progressbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/progressbar"
         android:gravity="center"
-        android:visibility="gone"
+        android:visibility="visible"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
 
         />

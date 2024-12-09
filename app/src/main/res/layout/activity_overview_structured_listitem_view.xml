@@ -1,12 +1,22 @@
-<androidx.constraintlayout.widget.ConstraintLayout
+<layout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
+    <data>
+        <variable
+            name="item"
+            type="org.dieschnittstelle.mobile.android.todo.model.DataItem" />
+    </data>
+<androidx.constraintlayout.widget.ConstraintLayout
+
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/listItemContainer"
     android:background="@color/todo_background_default"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    >
 <CheckBox
     android:focusable="false"
+    android:checked="@={item.checked}"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     app:layout_constraintLeft_toLeftOf="parent"
@@ -15,6 +25,7 @@
     android:id="@+id/itemChecked"
     />
 <TextView
+    android:text="@={item.name}"
     android:id="@+id/itemNameInOverview"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
@@ -25,20 +36,6 @@
     app:layout_constraintTop_toTopOf="parent"
     >
 </TextView>
-    <!--<ProgressBar
-        android:id="@+id/progressBarOfEachItem"
-        android:layout_width="0dp"
-        android:layout_height="20dp"
-        android:indeterminate="false"
-        android:progressDrawable="@drawable/progress_bar_custom"
-        style="@android:style/Widget.ProgressBar.Horizontal"
-        android:max="100"
-        android:progress="100"
-        app:layout_constraintEnd_toStartOf="@id/priorityIcon"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
-        -->
-
     <include
         android:id="@+id/progressBarContainer"
         layout="@layout/progress_bar_with_text"
@@ -71,3 +68,4 @@
         android:layout_width="30dp"
     />
     </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

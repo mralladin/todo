@@ -2,6 +2,7 @@ package org.dieschnittstelle.mobile.android.todo.model;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
@@ -36,7 +37,7 @@ public class DataItem implements Serializable {
         this.id = id;
     }
 
-
+    @Ignore
     public DataItem(String name) {
         this.name = name;
     }

@@ -7,7 +7,7 @@ public interface IDataItemCRUDOperations
 
     public DataItem createDataItem(DataItem item);
 
-    public List<DataItem> readAllDataItems() throws InterruptedException;
+    public List<DataItem> readAllDataItems();
 
     public DataItem readDataItem(long id);
 
