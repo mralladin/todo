@@ -15,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -24,6 +25,9 @@ import com.google.firebase.auth.FirebaseUser;
 import org.dieschnittstelle.mobile.android.skeleton.R;
 import org.dieschnittstelle.mobile.android.skeleton.databinding.ActivityDetailviewBinding;
 import org.dieschnittstelle.mobile.android.todo.model.DataItem;
+import org.dieschnittstelle.mobile.android.todo.model.IDataItemCRUDOperations;
+import org.dieschnittstelle.mobile.android.todo.model.LocalItemCRUDOperationsWithRoom;
+import org.dieschnittstelle.mobile.android.todo.viewmodel.DetailviewViewModel;
 import org.dieschnittstelle.mobile.android.todo.widgets.DatePickerActivity;
 
 import java.text.ParseException;
@@ -43,52 +47,66 @@ public class DetailviewActivity extends AppCompatActivity {
     private int prioValue=0;
     private Date tbdDate;
     private Spinner prioritySpinner;
+    private DetailviewViewModel viewModel;
     public DetailviewActivity(){
         Log.i(LOG_TAG,"contructor called");
     }
-    DataItem item;
 
-    public DataItem getItem() {
-        return item;
-    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        item = (DataItem) getIntent().getSerializableExtra(OverviewActivity.ARG_ITEM);
-        if (item==null){
-            item=new DataItem();
-            //Bei innitialier erstellung muss das Start Datum gesetzt werden
-            item.setStartTime(new Date().getTime());
+        this.viewModel = new ViewModelProvider(this).get(DetailviewViewModel.class);
+
+        if(viewModel.getItem() == null){
+            DataItem item = (DataItem) getIntent().getSerializableExtra(OverviewActivity.ARG_ITEM);
+            if (item==null){
+                item=new DataItem();
+                //Bei innitialier erstellung muss das Start Datum gesetzt werden
+                item.setStartTime(new Date().getTime());
+            }
+            this.viewModel.setItem(item);
+
         }
 
         // Controller und Item mit Binding verknüpfen
         binding = DataBindingUtil.setContentView(this, R.layout.activity_detailview);
-        binding.setController(this);
+        binding.setViewmodel(this.viewModel);
+        binding.setLifecycleOwner(this);
 
+        //register acitivty as observer
 
-        Log.i("Debuger","item"+item);
+        this.viewModel.getValidOnSave().observe(this,validOnSave->{
+            if(validOnSave){
+                saveItem();
+            }
+        });
+
+        Log.i("Debuger","item"+viewModel.getItem());
 
         prioritySpinner = findViewById(R.id.prioritySpinner);
-        prioritySpinner.setSelection(item.getPrio());
+        prioritySpinner.setSelection(viewModel.getItem().getPrio());
 
         dateEditText = findViewById(R.id.dateEditText);
-        dateEditText.setText(getFormatesDateStringFromLong(item.getTbdDate()));
+        dateEditText.setText(getFormatesDateStringFromLong(viewModel.getItem().getTbdDate()));
+
+        dateEditText.setOnClickListener(v -> {
+            showDatePicker();
+        });
 
     }
 
     public void saveItem() {
         Intent returnIntent = new Intent();
         parseDateString(dateEditText.getText().toString());
-        item.setTbdDate(tbdTimestamp);
-        item.setPrio(prioritySpinner.getSelectedItemPosition());
+        viewModel.getItem().setTbdDate(tbdTimestamp);
+        viewModel.getItem().setPrio(prioritySpinner.getSelectedItemPosition());
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
-            item.setUseridcreated(user.getUid());
+            viewModel.getItem().setUseridcreated(user.getUid());
         }
-
-        returnIntent.putExtra(OverviewActivity.ARG_ITEM,item);
+        returnIntent.putExtra(OverviewActivity.ARG_ITEM,viewModel.getItem());
         Log.e("TestLog","Hello: "+R.id.dateAsText);
         this.setResult(DetailviewActivity.RESULT_OK,returnIntent);
         this.finish();
