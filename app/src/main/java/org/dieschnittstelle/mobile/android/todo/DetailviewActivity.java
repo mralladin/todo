@@ -4,11 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-import android.view.View;
-import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -17,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -25,14 +20,11 @@ import com.google.firebase.auth.FirebaseUser;
 import org.dieschnittstelle.mobile.android.skeleton.R;
 import org.dieschnittstelle.mobile.android.skeleton.databinding.ActivityDetailviewBinding;
 import org.dieschnittstelle.mobile.android.todo.model.DataItem;
-import org.dieschnittstelle.mobile.android.todo.model.IDataItemCRUDOperations;
-import org.dieschnittstelle.mobile.android.todo.model.LocalItemCRUDOperationsWithRoom;
 import org.dieschnittstelle.mobile.android.todo.viewmodel.DetailviewViewModel;
 import org.dieschnittstelle.mobile.android.todo.widgets.DatePickerActivity;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 
 public class DetailviewActivity extends AppCompatActivity {

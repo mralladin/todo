@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.icu.util.Calendar;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
@@ -38,7 +39,8 @@ import org.dieschnittstelle.mobile.android.skeleton.R;
 import org.dieschnittstelle.mobile.android.skeleton.databinding.ActivityOverviewStructuredListitemViewBinding;
 import org.dieschnittstelle.mobile.android.todo.model.DataItem;
 import org.dieschnittstelle.mobile.android.todo.model.IDataItemCRUDOperations;
-import org.dieschnittstelle.mobile.android.todo.model.LocalItemCRUDOperationsWithRoom;
+import org.dieschnittstelle.mobile.android.todo.model.LocalDataItemCRUDOperationsWithRoom;
+import org.dieschnittstelle.mobile.android.todo.model.RemoteDataItemCRUDOperationsWithRetrofit;
 import org.dieschnittstelle.mobile.android.todo.security.AuthManager;
 import org.dieschnittstelle.mobile.android.todo.viewmodel.OverviewViewModel;
 
@@ -72,7 +74,8 @@ public class OverviewActivity extends AppCompatActivity {
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         monitorConnectionStatus();
 
-        crudOperations=new LocalItemCRUDOperationsWithRoom(this);
+        //crudOperations=new LocalDataItemCRUDOperationsWithRoom(this);
+        crudOperations=new RemoteDataItemCRUDOperationsWithRetrofit();
         Log.i("CrudOps","1"+crudOperations);
 
         viewmodel = new ViewModelProvider(this).get(OverviewViewModel.class);
@@ -473,6 +476,12 @@ public class OverviewActivity extends AppCompatActivity {
     private long calculateTotalTime(DataItem item) {
         Log.i("TimerLog","Starttime: "+item.getStartTime());
         Log.i("TimerLog","TBDtime: "+item.getTbdDate());
+        if(item.getStartTime()==null || item.getTbdDate()==null){
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(0,1);
+            item.setStartTime(calendar.getTimeInMillis());
+        }
         Date startTime = new Date(item.getStartTime());
         Date tbdDate = new Date();
 

@@ -18,10 +18,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.dieschnittstelle.mobile.android.todo.util.DateConverter;
 
-import java.util.Collections;
 import java.util.List;
 @Entity
-public class LocalItemCRUDOperationsWithRoom implements IDataItemCRUDOperations{
+public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperations{
     @Dao
     public static interface SQLiteDataItemCRUDOperations{
         @Insert
@@ -49,7 +48,7 @@ public class LocalItemCRUDOperationsWithRoom implements IDataItemCRUDOperations{
     private FirebaseFirestore firestore;
 
     private DataItemDatabase db;
-    public LocalItemCRUDOperationsWithRoom(Context context ){
+    public LocalDataItemCRUDOperationsWithRoom(Context context ){
         // Room-Setup
         DataItemDatabase db = Room.databaseBuilder(
                 context.getApplicationContext(),
