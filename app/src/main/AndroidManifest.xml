@@ -3,6 +3,7 @@
   >
 
     <application
+        android:name="org.dieschnittstelle.mobile.android.todo.viewmodel.DateItemApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -21,7 +22,6 @@
         </activity>
         <activity android:name="org.dieschnittstelle.mobile.android.todo.widgets.DatePickerActivity" />
         <activity android:name="org.dieschnittstelle.mobile.android.todo.LoginActivity" />
-
         <activity android:name="org.dieschnittstelle.mobile.android.todo.DetailviewActivity" />
     </application>
 

@@ -42,9 +42,12 @@ import org.dieschnittstelle.mobile.android.todo.model.IDataItemCRUDOperations;
 import org.dieschnittstelle.mobile.android.todo.model.LocalDataItemCRUDOperationsWithRoom;
 import org.dieschnittstelle.mobile.android.todo.model.RemoteDataItemCRUDOperationsWithRetrofit;
 import org.dieschnittstelle.mobile.android.todo.security.AuthManager;
+import org.dieschnittstelle.mobile.android.todo.viewmodel.DateItemApplication;
 import org.dieschnittstelle.mobile.android.todo.viewmodel.OverviewViewModel;
 
 import java.util.Date;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class OverviewActivity extends AppCompatActivity {
@@ -68,20 +71,23 @@ public class OverviewActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        Log.i("TestLog0","here?");
         AuthManager authManager = new AuthManager();
         setContentView(R.layout.activity_overview);
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
-        monitorConnectionStatus();
+       //monitorConnectionStatus();
 
         //crudOperations=new LocalDataItemCRUDOperationsWithRoom(this);
-        crudOperations=new RemoteDataItemCRUDOperationsWithRetrofit();
-        Log.i("CrudOps","1"+crudOperations);
+        try {
+            Log.i("TestLog1","here?");
+            Future<IDataItemCRUDOperations> crudOperationsFuture = ((DateItemApplication) getApplication()).getCrudOperations();
+            Log.i("TestLog2","here?");
+            crudOperations = crudOperationsFuture.get();
 
-        viewmodel = new ViewModelProvider(this).get(OverviewViewModel.class);
+            viewmodel = new ViewModelProvider(this).get(OverviewViewModel.class);
 
 
-        viewmodel.setCrudOperations(crudOperations);
+            viewmodel.setCrudOperations(crudOperations);
 
         progressBar = findViewById(R.id.progressbar);
 
@@ -97,11 +103,13 @@ public class OverviewActivity extends AppCompatActivity {
 
         });
 
+
+
         //if(isOnline) {
 
             if (authManager.getCurrentUser() == null) {
                 // Kein Benutzer angemeldet -> zur Login-Seite weiterleiten
-                startLoginActivity();
+                //startLoginActivity();
 
             } else {
                 // Benutzer ist angemeldet -> App normal starten
@@ -116,7 +124,6 @@ public class OverviewActivity extends AppCompatActivity {
             viewmodel.readAllDataItems();
             viewmodel.setInitialised(true);
         }
-
 
 
 
@@ -208,6 +215,7 @@ public class OverviewActivity extends AppCompatActivity {
 
 
             }
+
         };
 
         listView.setAdapter(listviewAdapter);
@@ -234,7 +242,10 @@ public class OverviewActivity extends AppCompatActivity {
 
 
 
-
+        }
+        catch (Exception e){
+            Log.e("ExceptionLog",e.getMessage());
+        }
 
     }
     private void showPopupMenu(View anchorView, int position) {
