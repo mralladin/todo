@@ -36,7 +36,7 @@ public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperati
         public DataItem readItem(long id);
 
     }
-   @Database(entities = DataItem.class, version = 5)
+   @Database(entities = DataItem.class, version = 6)
    @TypeConverters({DateConverter.class}) // Converter hinzufügen
    public abstract static class DataItemDatabase extends RoomDatabase{
 
@@ -60,7 +60,7 @@ public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperati
         this.localDao = db.getDao();
 
         // Firestore-Setup
-        this.firestore = FirebaseFirestore.getInstance();
+        //this.firestore = FirebaseFirestore.getInstance();
     }
 
     @Override
@@ -70,9 +70,9 @@ public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperati
         item.setId(newId);
 
         // Speichern in Firestore
-        firestore.collection("dataitems")
+        /*firestore.collection("dataitems")
                 .document(String.valueOf(item.getId()))
-                .set(item);
+                .set(item);*/
 
         return item;
     }
@@ -81,9 +81,9 @@ public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperati
     public List<DataItem> readAllDataItems() {
         // Zuerst lokale Daten laden
         List<DataItem> localItems = localDao.readAllItems();
-        localItems.forEach(dataItem ->
+        /*localItems.forEach(dataItem ->
                         Log.i(LOG_TAG,"Get DataItem: "+dataItem.getId()+" DataItem Name:"+dataItem.getName())
-                );
+                );*/
         return localItems;
     }
 
@@ -98,24 +98,24 @@ public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperati
         // Update in Room
            localDao.updateItem(item);
            // Update in Firestore
-           firestore.collection("dataitems")
+           /*firestore.collection("dataitems")
                    .document(String.valueOf(item.getId()))
-                   .set(item);
+                   .set(item);*/
         return true;
     }
 
     @Override
-    public DataItem deleteDataItem(long id) {
-        DataItem item = localDao.readItem(id);
+    public Boolean deleteDataItem(DataItem itemToDel) {
+        DataItem item = localDao.readItem(itemToDel.getId());
 
         // Löschen aus Room
         localDao.deleteItem(item);
 
         // Löschen aus Firestore
-        firestore.collection("dataitems")
+       /* firestore.collection("dataitems")
                 .document(String.valueOf(item.getId()))
-                .delete();
+                .delete();*/
 
-        return item;
+        return true;
     }
 }

@@ -182,11 +182,6 @@ public class OverviewActivity extends AppCompatActivity {
                 binding.setItem(listItem);
 
 
-
-                Log.i("ViewLog", "Aufruf der View Elemente");
-
-
-
                 setImageViewColor((ImageView)listItemView.findViewById(R.id.priorityIcon),listItem.getPrio());
                 ProgressBar progressbarOfEachElem= listItemView.findViewById(R.id.progressBarOfEachItem);
                 TextView progressText = listItemView.findViewById(R.id.progressTextOfEachItem);
@@ -199,7 +194,7 @@ public class OverviewActivity extends AppCompatActivity {
                     viewmodel.getProcessingState().setValue(OverviewViewModel.ProcessingState.RUNNING_LONG);
                     new Thread(() -> {
                         // Element aus der Datenbank entfernen
-                        crudOperations.deleteDataItem(listItem.getId());
+                        crudOperations.deleteDataItem(listItem);
 
                         // Element aus der lokalen Liste entfernen
                         runOnUiThread(() -> {
@@ -310,7 +305,7 @@ public class OverviewActivity extends AppCompatActivity {
                         // Element aus der Datenbank entfernen
                         DataItem listItem = viewmodel.getDataItems().get(position);
                         Log.e("DeleteLog","listItem.getId(): "+listItem.getId()+"   "+crudOperations );
-                        crudOperations.deleteDataItem(listItem.getId());
+                        crudOperations.deleteDataItem(listItem);
 
 
                         // Element aus der lokalen Liste entfernen

@@ -1,10 +1,12 @@
 package org.dieschnittstelle.mobile.android.todo.model;
 
+import android.util.Log;
+
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 import retrofit2.Call;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Body;
@@ -28,7 +30,7 @@ public class RemoteDataItemCRUDOperationsWithRetrofit implements IDataItemCRUDOp
         @PUT("/api/todos/{todoId}")
         public Call<Boolean> updateItem(@Path("todoId") long itemId,@Body DataItem item);
         @DELETE("/api/todos/{todoId}")
-        public Call<DataItem> deleteItem(@Path("todoId") long itemId);
+        public Call<Boolean> deleteItem(@Path("todoId") long itemId);
 
     }
 
@@ -45,7 +47,13 @@ public class RemoteDataItemCRUDOperationsWithRetrofit implements IDataItemCRUDOp
     public DataItem createDataItem(DataItem item) {
         DataItem createdItem= null;
         try {
-            createdItem = todoRESTWebAPI.createItem(item).execute().body();
+            Response<DataItem> response = todoRESTWebAPI.createItem(item).execute();
+            if (response.isSuccessful()) {
+                System.out.println(response.body()); // Debug-Ausgabe
+                createdItem = todoRESTWebAPI.createItem(item).execute().body();
+            } else {
+                Log.e("Response","Log:"+response.errorBody().string());
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -81,9 +89,12 @@ public class RemoteDataItemCRUDOperationsWithRetrofit implements IDataItemCRUDOp
     }
 
     @Override
-    public DataItem deleteDataItem(long id) {
+    public Boolean deleteDataItem(DataItem item) {
         try {
-            return   todoRESTWebAPI.deleteItem(id).execute().body();
+            Log.i("TestLog1","dknallt da?");
+            Boolean d = todoRESTWebAPI.deleteItem(item.getId()).execute().body();
+            Log.i("TestLog1","d:"+d);
+            return  d;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

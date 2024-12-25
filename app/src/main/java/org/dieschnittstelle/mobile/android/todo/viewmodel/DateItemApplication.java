@@ -5,6 +5,7 @@ import android.util.Log;
 
 import org.dieschnittstelle.mobile.android.todo.model.IDataItemCRUDOperations;
 import org.dieschnittstelle.mobile.android.todo.model.LocalDataItemCRUDOperationsWithRoom;
+import org.dieschnittstelle.mobile.android.todo.model.RemoteDataItemCRUDOperationsWithFirebase;
 import org.dieschnittstelle.mobile.android.todo.model.RemoteDataItemCRUDOperationsWithRetrofit;
 
 import java.io.IOException;
@@ -59,7 +60,7 @@ public class DateItemApplication extends Application {
             boolean backendAvailable = checkAccessToBackend();
             Log.i("TestLog2","2");
             if(backendAvailable){
-                this.crudOperations = new RemoteDataItemCRUDOperationsWithRetrofit();
+                this.crudOperations = new RemoteDataItemCRUDOperationsWithFirebase();
             }else{
                 this.crudOperations = new LocalDataItemCRUDOperationsWithRoom(this);
             }

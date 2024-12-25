@@ -13,7 +13,7 @@ public interface IDataItemCRUDOperations
 
     public Boolean updateDataItem(DataItem item);
 
-    public DataItem deleteDataItem(long id);
+    public Boolean deleteDataItem(DataItem item);
 
 
 }

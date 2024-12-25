@@ -33,6 +33,7 @@ public class DetailviewActivity extends AppCompatActivity {
     private ActivityDetailviewBinding binding;
 
     protected static final String LOG_TAG = DetailviewActivity.class.getName();
+    protected static final String ARG_ITEM = "item";
     private TextInputEditText dateEditText;
     private String selectedDate;
     private Long tbdTimestamp;
@@ -52,7 +53,7 @@ public class DetailviewActivity extends AppCompatActivity {
         this.viewModel = new ViewModelProvider(this).get(DetailviewViewModel.class);
 
         if(viewModel.getItem() == null){
-            DataItem item = (DataItem) getIntent().getSerializableExtra(OverviewActivity.ARG_ITEM);
+            DataItem item = (DataItem) getIntent().getSerializableExtra(ARG_ITEM);
             if (item==null){
                 item=new DataItem();
                 //Bei innitialier erstellung muss das Start Datum gesetzt werden
@@ -72,6 +73,8 @@ public class DetailviewActivity extends AppCompatActivity {
         this.viewModel.getValidOnSave().observe(this,validOnSave->{
             if(validOnSave){
                 saveItem();
+                Log.i("save","save");
+
             }
         });
 
@@ -93,13 +96,14 @@ public class DetailviewActivity extends AppCompatActivity {
         Intent returnIntent = new Intent();
         parseDateString(dateEditText.getText().toString());
         viewModel.getItem().setTbdDate(tbdTimestamp);
+        Log.e("TestLog","prioritySpinner: "+prioritySpinner.getSelectedItemPosition());
+
         viewModel.getItem().setPrio(prioritySpinner.getSelectedItemPosition());
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             viewModel.getItem().setUseridcreated(user.getUid());
         }
         returnIntent.putExtra(OverviewActivity.ARG_ITEM,viewModel.getItem());
-        Log.e("TestLog","Hello: "+R.id.dateAsText);
         this.setResult(DetailviewActivity.RESULT_OK,returnIntent);
         this.finish();
     }

@@ -17,12 +17,22 @@ public class DataItem implements Serializable {
 
     @PrimaryKey(autoGenerate = true)
     private long id;
+
+    public String getFirebaseId() {
+        return firebaseId;
+    }
+
+    public void setFirebaseId(String firebaseId) {
+        this.firebaseId = firebaseId;
+    }
+
+    private String firebaseId;
     private String name;
     private String description;
     private boolean checked;
     private String useridcreated;
     private String useridassigned;
-    private int prio;
+    private int prio=0;
     @TypeConverters(DateConverter.class) // Verwende einen Converter für Room
     //Wann das DataItem fertig ist
     private Long tbdDate;
