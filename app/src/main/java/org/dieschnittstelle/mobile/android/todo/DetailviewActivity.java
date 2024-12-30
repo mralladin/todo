@@ -25,7 +25,9 @@ import org.dieschnittstelle.mobile.android.todo.widgets.DatePickerActivity;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class DetailviewActivity extends AppCompatActivity {
 
@@ -56,8 +58,8 @@ public class DetailviewActivity extends AppCompatActivity {
             DataItem item = (DataItem) getIntent().getSerializableExtra(ARG_ITEM);
             if (item==null){
                 item=new DataItem();
-                //Bei innitialier erstellung muss das Start Datum gesetzt werden
-                item.setStartTime(new Date().getTime());
+                Calendar calendar = Calendar.getInstance();
+                item.setStartTime(calendar.getTimeInMillis());
             }
             this.viewModel.setItem(item);
 
@@ -77,8 +79,6 @@ public class DetailviewActivity extends AppCompatActivity {
 
             }
         });
-
-        Log.i("Debuger","item"+viewModel.getItem());
 
         prioritySpinner = findViewById(R.id.prioritySpinner);
         prioritySpinner.setSelection(viewModel.getItem().getPrio());
@@ -136,11 +136,14 @@ public class DetailviewActivity extends AppCompatActivity {
 
     private String getFormatesDateStringFromLong(Long timestamp){
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+        Calendar calendar = Calendar.getInstance();
         if(timestamp==null){
-            timestamp=new Date().getTime();
+            timestamp=calendar.getTime().getTime();
+            Log.i("Debuger","calendar "+calendar.getTime());
         }
         // Timestamp in Date umwandeln
         Date date = new Date(timestamp);
+        Log.i("Debuger","date "+date);
 
         // Date in das gewünschte String-Format umwandeln
         return dateFormat.format(date);

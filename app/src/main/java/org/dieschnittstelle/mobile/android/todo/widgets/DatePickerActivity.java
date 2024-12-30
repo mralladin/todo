@@ -14,9 +14,11 @@ import org.dieschnittstelle.mobile.android.skeleton.R;
 import org.dieschnittstelle.mobile.android.todo.OverviewActivity;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class DatePickerActivity extends Activity {
     /** Called when the activity is first created. */
@@ -29,6 +31,14 @@ public class DatePickerActivity extends Activity {
         DatePicker picker = (DatePicker)findViewById(R.id.datepicker);
         TimePicker timepicker = (TimePicker) findViewById(R.id.timepicker);
         timepicker.setIs24HourView(true);
+        Calendar calendar = Calendar.getInstance();
+        Log.i("Debuger","calendar in date picker "+calendar.getTime());
+        int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
+        calendar.add(Calendar.MINUTE,4);
+        int currentMinute = calendar.get(Calendar.MINUTE);
+        Log.i("DateLogg,","hour"+currentHour);
+        timepicker.setHour(currentHour);
+        timepicker.setMinute(currentMinute);
 
 
         // das Textfeld zur textuellen Darstellung des Datums
@@ -48,7 +58,6 @@ public class DatePickerActivity extends Activity {
             int hour = timepicker.getHour();
             int minute = timepicker.getMinute();
 
-            Calendar calendar = Calendar.getInstance();
             calendar.set(year, month, day, hour, minute);
 
             // Formatieren des Datums

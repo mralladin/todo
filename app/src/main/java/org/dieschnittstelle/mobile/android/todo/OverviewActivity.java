@@ -46,6 +46,8 @@ import org.dieschnittstelle.mobile.android.todo.viewmodel.DateItemApplication;
 import org.dieschnittstelle.mobile.android.todo.viewmodel.OverviewViewModel;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,6 +61,7 @@ public class OverviewActivity extends AppCompatActivity {
     private boolean isOnline=false;
     private OverviewViewModel viewmodel;
     private static String LOG_TAG = "OverviewActivity";
+    private HashMap<String, CountDownTimer> activeTimers = new HashMap<>();
 
 
 
@@ -85,11 +88,13 @@ public class OverviewActivity extends AppCompatActivity {
             crudOperations = crudOperationsFuture.get();
 
             viewmodel = new ViewModelProvider(this).get(OverviewViewModel.class);
-
-
+            Log.i("TestLog2","crudOperations:" + crudOperations.toString());
             viewmodel.setCrudOperations(crudOperations);
 
+
         progressBar = findViewById(R.id.progressbar);
+
+       setOnlineStatus();
 
 
         viewmodel.getProcessingState().observe(this, processingState -> {
@@ -98,6 +103,12 @@ public class OverviewActivity extends AppCompatActivity {
                 this.progressBar.setVisibility(View.VISIBLE);
             }else if(processingState == OverviewViewModel.ProcessingState.DONE){
                 this.progressBar.setVisibility(View.GONE);
+                for (String value : activeTimers.keySet()) {
+                    if(activeTimers.get(value)!=null){
+                        activeTimers.get(value).cancel();
+                    }
+                }
+                activeTimers.clear();
                 this.listviewAdapter.notifyDataSetChanged();
              };
 
@@ -159,6 +170,8 @@ public class OverviewActivity extends AppCompatActivity {
 
         listviewAdapter= new ArrayAdapter<>(this,R.layout.activity_overview_structured_listitem_view,viewmodel.getDataItems()){
 
+
+
             @NonNull
             @Override
             public View getView(int position, @Nullable View recyclableListItemView, @NonNull ViewGroup parent) {
@@ -166,6 +179,7 @@ public class OverviewActivity extends AppCompatActivity {
                 ActivityOverviewStructuredListitemViewBinding binding;
                 View listItemView=null;
                 DataItem listItem = getItem(position);
+
 
 
                 //If now view can be recycled we need to create a new one
@@ -184,25 +198,17 @@ public class OverviewActivity extends AppCompatActivity {
 
                 setImageViewColor((ImageView)listItemView.findViewById(R.id.priorityIcon),listItem.getPrio());
                 ProgressBar progressbarOfEachElem= listItemView.findViewById(R.id.progressBarOfEachItem);
+                //Progress Text
                 TextView progressText = listItemView.findViewById(R.id.progressTextOfEachItem);
                 ConstraintLayout listItemContainer = listItemView.findViewById(R.id.listItemContainer);
-                setTimersAndTextForEachListItem(listItemContainer,progressText,progressbarOfEachElem,listItemView,listItem);
+                Log.i("Debuger","positionViewElem"+position);
+
+                setTimersAndTextForEachListItem(position,listItemContainer,progressText,progressbarOfEachElem,listItemView,listItem);
 
                 // Delete-Button Klick-Listener
                 Button deleteButton = listItemView.findViewById(R.id.deleteButton);
                 deleteButton.setOnClickListener(v -> {
-                    viewmodel.getProcessingState().setValue(OverviewViewModel.ProcessingState.RUNNING_LONG);
-                    new Thread(() -> {
-                        // Element aus der Datenbank entfernen
-                        crudOperations.deleteDataItem(listItem);
-
-                        // Element aus der lokalen Liste entfernen
-                        runOnUiThread(() -> {
-                            viewmodel.getDataItems().remove(position);
-                            viewmodel.getProcessingState().postValue(OverviewViewModel.ProcessingState.DONE);
-                            Toast.makeText(OverviewActivity.this, listItem.getName() + " gelöscht", Toast.LENGTH_SHORT).show();
-                        });
-                    }).start();
+                    deleteItem(position);
                 });
 
 
@@ -212,6 +218,8 @@ public class OverviewActivity extends AppCompatActivity {
             }
 
         };
+
+
 
         listView.setAdapter(listviewAdapter);
         listView.setOnItemLongClickListener((adapterView, view, position, id) -> {
@@ -239,10 +247,28 @@ public class OverviewActivity extends AppCompatActivity {
 
         }
         catch (Exception e){
-            Log.e("ExceptionLog",e.getMessage());
         }
 
     }
+
+    private void setOnlineStatus() {
+        // Holen des ImageView-Elements
+        ImageView connectionStatusImageView = findViewById(R.id.connection_status);
+        // Überprüfen der Verbindung zum Backend
+        new Thread(() -> {
+            boolean isConnected = ((DateItemApplication) getApplication()).checkAccessToBackend();
+
+            if (isConnected) {
+                // Wenn verbunden, setze das grüne Icon
+                connectionStatusImageView.setImageResource(R.drawable.baseline_cloud_done_24);  // grünes Icon
+            } else {
+                // Wenn nicht verbunden, setze das rote Icon
+                connectionStatusImageView.setImageResource(R.drawable.baseline_cloud_off_24);  // rotes Icon
+            }
+        }).start();
+
+    }
+
     private void showPopupMenu(View anchorView, int position) {
         PopupMenu popupMenu = new PopupMenu(this, anchorView);
         popupMenu.getMenuInflater().inflate(R.menu.context_menu, popupMenu.getMenu());
@@ -273,10 +299,7 @@ public class OverviewActivity extends AppCompatActivity {
         String[] priorities = {"Niedrig", "Mittel", "Hoch", "Sehr hoch"};
         int[] selectedPriority = {0}; // Standardauswahl (Niedrig)
         DataItem listItem = viewmodel.getDataItems().get(position);
-        Log.i("TestLog","position "+position);
-        Log.i("TestLog","item "+listItem);
         AtomicInteger currentPriority = new AtomicInteger(listItem.getPrio());
-
         // Dialog erstellen
         new AlertDialog.Builder(this)
                 .setTitle("Priorität auswählen")
@@ -294,29 +317,41 @@ public class OverviewActivity extends AppCompatActivity {
 
 
     private void deleteItem(int position) {
+        DataItem listItem = viewmodel.getDataItems().get(position);
         // Dialog zur Bestätigung anzeigen
         new AlertDialog.Builder(this)
                 .setTitle("Löschen bestätigen")
                 .setMessage("Möchten Sie dieses Element wirklich löschen?")
                 .setPositiveButton("Ja", (dialog, which) -> {
-                    // Element aus der Liste entfernen
-                    listviewAdapter.notifyDataSetChanged();
-                    new Thread(() -> {
-                        // Element aus der Datenbank entfernen
-                        DataItem listItem = viewmodel.getDataItems().get(position);
-                        Log.e("DeleteLog","listItem.getId(): "+listItem.getId()+"   "+crudOperations );
-                        crudOperations.deleteDataItem(listItem);
+                    // Timer stoppen, falls vorhanden
+                    Log.i("DebuggingTimers","val to Remove"+String.valueOf(position));
+                    synchronized(activeTimers) {
+                        CountDownTimer timer = activeTimers.remove(String.valueOf(position));
+                        if (timer != null) {
+                            timer.cancel();
+                            Log.i("DebuggingTimers", "Timer für Position " + position + " wurde entfernt.");
+                        } else {
+                            Log.w("DebuggingTimers", "Kein Timer für Position " + position + " gefunden.");
+                        }
+                    }
 
+
+                    viewmodel.getProcessingState().setValue(OverviewViewModel.ProcessingState.RUNNING_LONG);
+                    new Thread(() -> {
+
+                        // Element aus der Datenbank entfernen
+                        crudOperations.deleteDataItem(listItem);
 
                         // Element aus der lokalen Liste entfernen
                         runOnUiThread(() -> {
                             viewmodel.getDataItems().remove(position);
-                            listviewAdapter.notifyDataSetChanged();
+                            viewmodel.getProcessingState().postValue(OverviewViewModel.ProcessingState.DONE);
                             Toast.makeText(OverviewActivity.this, listItem.getName() + " gelöscht", Toast.LENGTH_SHORT).show();
                         });
                     }).start();
 
-                    Toast.makeText(this, "Element gelöscht", Toast.LENGTH_SHORT).show();
+
+
                 })
                 .setNegativeButton("Abbrechen", (dialog, which) -> {
                     // Abbrechen, nichts tun
@@ -324,47 +359,65 @@ public class OverviewActivity extends AppCompatActivity {
                 })
                 .show();
     }
-    private void setTimersAndTextForEachListItem(ConstraintLayout listItemContainer,TextView progressText,ProgressBar progressBar, View listItemView, DataItem listItem) {
-        // Setze den Timer für dieses Element
-        long remainingTime = calculateRemainingTime(listItem); // Berechne die verbleibende Zeit
-        int maxProgress = 100; // Setze die maximale ProgressBar-Werte
-        long totalTime=calculateTotalTime(listItem);
-        progressBar.setMax(maxProgress);
+    private void setTimersAndTextForEachListItem(
+            int position,
+            ConstraintLayout listItemContainer,
+            TextView progressText,
+            ProgressBar progressBar,
+            View listItemView,
+            DataItem listItem) {
 
-        new CountDownTimer(remainingTime, 10) {
-            private boolean firstTick = true;
+        // Berechne verbleibende Zeit und Gesamtzeit
+        long remainingTime = calculateRemainingTime(listItem);
+        long totalTime = calculateTotalTime(listItem);
+        // Verhindere Division durch 0
+        if (remainingTime <= 0) {
+            progressBar.setProgress(0);
+            progressText.setText(R.string.finish);
+            listItemContainer.setEnabled(false);
+            /*listItemContainer.setBackgroundColor(
+                    listItemView.getContext().getResources().getColor(R.color.todo_text_expired)
+            );*/
+            return;
+        }else{
+        // Setze den initialen Fortschritt
+        progressBar.setMax(100);
+        updateProgress(progressBar, progressText, remainingTime, totalTime);
 
+        // Starte den Timer
+        CountDownTimer timer= new CountDownTimer(remainingTime, 1000) { // Aktualisierung jede Sekunde
             @Override
             public void onTick(long millisUntilFinished) {
-                //int progress = (int) ((millisUntilFinished * maxProgress) / remainingTime);
-                int progress = (int) Math.ceil((millisUntilFinished * 100.0) / totalTime);
-                Log.i("TimerLog","totalTime: "+totalTime);
-                Log.i("TimerLog","milis until finished: "+millisUntilFinished * 100.0);
-                if (firstTick) {
-                    // Erzwinge 100% beim Start
-                    progressBar.setProgress(100);
-                    progressText.setText("100%");
-                    firstTick = false;
-                    return;
-                }
-                progressBar.setProgress(progress);
-                progressText.setText(progress+"%");
-                //progressBar.setProgress(50);
-
-
+                updateProgress(progressBar, progressText, millisUntilFinished, totalTime);
             }
 
             @Override
             public void onFinish() {
                 progressBar.setProgress(0);
                 progressText.setText(R.string.finish);
-                //listItemContainer.setTextColor(ContextCompat.getColor(listItemView.getContext(), R.color.todo_text_expired));
                 listItemContainer.setEnabled(false);
-                listItemContainer.setBackgroundColor(
+                /*listItemContainer.setBackgroundColor(
                         listItemView.getContext().getResources().getColor(R.color.todo_text_expired)
-                );
+                );*/
             }
         }.start();
+            for (String value : activeTimers.keySet()) {
+                Log.i("DebuggingTimers","key: "+value);
+            }
+            if (!activeTimers.containsKey(String.valueOf(position))) {
+                activeTimers.put(String.valueOf(position), timer);
+            }
+
+        }
+    }
+
+    // Hilfsmethode zur Aktualisierung des Fortschritts
+    private void updateProgress(ProgressBar progressBar, TextView progressText, long remainingTime, long totalTime) {
+        int progress = (int) Math.round((remainingTime * 100.0) / totalTime);
+        Log.i("Debuger","progress: "+progress);
+
+        progressBar.setProgress(progress);
+        progressText.setText(progress + "%");
     }
 
     private void startLoginActivity() {
@@ -379,7 +432,12 @@ public class OverviewActivity extends AppCompatActivity {
         }
 
     private void refreshData() {
+        setOnlineStatus();
         // Neue Daten hinzufügen oder Aktion durchführen
+        Log.i("DebuggingTimers","timer size"+activeTimers.size());
+        for (String value : activeTimers.keySet()) {
+            Log.i("DebuggingTimers","key: "+value);
+        }
 
         listviewAdapter.notifyDataSetChanged();
     }

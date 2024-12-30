@@ -26,7 +26,6 @@
                 android:layout_height="20dp"
                 android:layout_gravity="left"
                 android:layout_margin="8dp"
-
                 android:src="@drawable/baseline_cloud_24" />
             <!-- Zusätzlicher TextView -->
             <TextView
