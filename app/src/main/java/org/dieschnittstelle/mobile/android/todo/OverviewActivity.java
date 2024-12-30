@@ -8,6 +8,9 @@ import android.icu.util.Calendar;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -47,6 +50,7 @@ import org.dieschnittstelle.mobile.android.todo.viewmodel.OverviewViewModel;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -248,7 +252,7 @@ public class OverviewActivity extends AppCompatActivity {
         }
         catch (Exception e){
         }
-
+        syncTodos();
     }
 
     private void setOnlineStatus() {
@@ -432,7 +436,16 @@ public class OverviewActivity extends AppCompatActivity {
         }
 
     private void refreshData() {
+        new Thread(() -> {
+            List<DataItem> dataItems = ((DateItemApplication)getApplication()).getLocalCrudOperations().readAllDataItems();
+            for (DataItem item : dataItems) {
+                Log.i(LOG_TAG, item.getName());
+            }
+
+        }).start();
+
         setOnlineStatus();
+        //syncTodos();
         // Neue Daten hinzufügen oder Aktion durchführen
         Log.i("DebuggingTimers","timer size"+activeTimers.size());
         for (String value : activeTimers.keySet()) {
@@ -440,6 +453,20 @@ public class OverviewActivity extends AppCompatActivity {
         }
 
         listviewAdapter.notifyDataSetChanged();
+    }
+
+    private void syncTodos() {
+        viewmodel.getProcessingState().setValue(OverviewViewModel.ProcessingState.RUNNING_LONG);
+
+        new Thread(() -> {
+            boolean backendAvailable=((DateItemApplication) getApplication()).checkAccessToBackend();
+            IDataItemCRUDOperations localOperations=((DateItemApplication) getApplication()).getLocalCrudOperations();
+            IDataItemCRUDOperations remoteOperations=((DateItemApplication) getApplication()).getRemoteCrudOperations();
+            viewmodel.syncTodos(backendAvailable,localOperations, remoteOperations);
+           viewmodel.getProcessingState().postValue(OverviewViewModel.ProcessingState.DONE);
+
+        }).start();
+
     }
 
     private void setImageViewColor(ImageView priorityIcon,int priority){
@@ -457,6 +484,31 @@ public class OverviewActivity extends AppCompatActivity {
             case 3: // Höchste Priorität
                 priorityIcon.setColorFilter(ContextCompat.getColor(this, R.color.red));
                 break;
+        }
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.overview_menu, menu); // Verknüpft die Menü-XML-Datei
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_delete_local:
+                viewmodel.deleteAllLocalTodos(((DateItemApplication)getApplication()).getLocalCrudOperations());
+                return true;
+            case R.id.action_delete_remote:
+                viewmodel.deleteAllRemoteTodos(((DateItemApplication)getApplication()).getRemoteCrudOperations());
+                return true;
+            case R.id.action_sync:
+                syncTodos();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 

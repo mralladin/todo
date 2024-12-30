@@ -6,7 +6,9 @@ import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.ViewModel;
 
+import org.dieschnittstelle.mobile.android.todo.model.DataItem;
 import org.dieschnittstelle.mobile.android.todo.model.IDataItemCRUDOperations;
 import org.dieschnittstelle.mobile.android.todo.model.LocalDataItemCRUDOperationsWithRoom;
 import org.dieschnittstelle.mobile.android.todo.model.RemoteDataItemCRUDOperationsWithFirebase;
@@ -26,6 +28,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -40,6 +43,16 @@ public class DateItemApplication extends Application {
     public IDataItemCRUDOperations crudOperations;
     protected static String LOG_TAG = "DATA_ITEMS";
 
+    public IDataItemCRUDOperations getRemoteCrudOperations() {
+        return remoteCrudOperations;
+    }
+
+    public IDataItemCRUDOperations getLocalCrudOperations() {
+        return localCrudOperations;
+    }
+
+    public IDataItemCRUDOperations localCrudOperations;
+    public IDataItemCRUDOperations remoteCrudOperations;
     @Override
     public void onCreate() {
         super.onCreate();
@@ -70,6 +83,8 @@ public class DateItemApplication extends Application {
         CompletableFuture<IDataItemCRUDOperations> future = new CompletableFuture<>();
         new Thread(() -> {
             boolean backendAvailable = checkAccessToBackend();
+            localCrudOperations =  new LocalDataItemCRUDOperationsWithRoom(this);
+            remoteCrudOperations = new RemoteDataItemCRUDOperationsWithFirebase();
             if(backendAvailable){
                 this.crudOperations = new RemoteDataItemCRUDOperationsWithFirebase();
             } else {
@@ -79,4 +94,5 @@ public class DateItemApplication extends Application {
         }).start();
         return  future;
     }
+
 }
