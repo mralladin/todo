@@ -146,14 +146,17 @@ public class OverviewViewModel extends ViewModel   {
 
 
     public void readAllDataItems() {
-
         processingState.setValue(ProcessingState.RUNNING_LONG);
+
         new Thread(() -> {
+            Log.i("CrudOps","processingState.getValue()"+processingState.getValue());
+            Log.i("TestLog2", "sleep " + "before");
             try {
-                Thread.sleep(3000);
+                Thread.sleep(8000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+            Log.i("TestLog2", "sleep " + "after");
             //Data to be shown
             Log.i("CrudOps","2"+this.crudOperations);
             //BUG#1 RACE Condition fix because of register???
@@ -162,8 +165,6 @@ public class OverviewViewModel extends ViewModel   {
                 getDataItems().addAll(items);
             }
             processingState.postValue(ProcessingState.DONE);
-
-
         }).start();
     }
 

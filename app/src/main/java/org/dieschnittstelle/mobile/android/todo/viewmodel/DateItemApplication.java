@@ -64,7 +64,7 @@ public class DateItemApplication extends Application {
         Log.i(LOG_TAG, "Checking access to backend...");
             try {
                 HttpURLConnection conn = (HttpURLConnection) new URL("https://console.firebase.google.com/").openConnection();
-                conn.setRequestMethod("GET");
+                conn.setRequestMethod("HEAD");
                 conn.setConnectTimeout(500);
                 conn.setReadTimeout(500);
                 conn.getInputStream();

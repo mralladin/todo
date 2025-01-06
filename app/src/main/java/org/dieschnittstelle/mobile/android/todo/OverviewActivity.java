@@ -7,6 +7,8 @@ import android.graphics.Color;
 import android.icu.util.Calendar;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -53,6 +55,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -60,13 +63,14 @@ public class OverviewActivity extends AppCompatActivity {
 
     private ListView listView;
     private ArrayAdapter<DataItem> listviewAdapter;
-    public static String ARG_ITEM="item";
+    public static String ARG_ITEM = "item";
     private SwipeRefreshLayout swipeRefreshLayout;
-    private boolean isOnline=false;
+    private boolean isOnline = false;
     private OverviewViewModel viewmodel;
     private static String LOG_TAG = "OverviewActivity";
     private HashMap<String, CountDownTimer> activeTimers = new HashMap<>();
-
+    private AuthManager authManager;
+    private ImageButton logoutButton;
 
 
     FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -75,184 +79,158 @@ public class OverviewActivity extends AppCompatActivity {
     protected final int REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_CREATE = 2;
     private IDataItemCRUDOperations crudOperations;
     private ProgressBar progressBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i("TestLog0","here?");
-        AuthManager authManager = new AuthManager();
+        Log.i("TestLog0", "here?");
+        authManager = new AuthManager();
         setContentView(R.layout.activity_overview);
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
-       //monitorConnectionStatus();
+        //monitorConnectionStatus();
 
         //crudOperations=new LocalDataItemCRUDOperationsWithRoom(this);
         try {
-            Log.i("TestLog1","here?");
             Future<IDataItemCRUDOperations> crudOperationsFuture = ((DateItemApplication) getApplication()).getCrudOperations();
-            Log.i("TestLog2","here?");
             crudOperations = crudOperationsFuture.get();
 
             viewmodel = new ViewModelProvider(this).get(OverviewViewModel.class);
-            Log.i("TestLog2","crudOperations:" + crudOperations.toString());
-            viewmodel.setCrudOperations(crudOperations);
-
-
-        progressBar = findViewById(R.id.progressbar);
-
-       setOnlineStatus();
-
-
-        viewmodel.getProcessingState().observe(this, processingState -> {
-            Log.i("TestLog2","observe processing state"+processingState);
-            if(processingState == OverviewViewModel.ProcessingState.RUNNING_LONG){
-                this.progressBar.setVisibility(View.VISIBLE);
-            }else if(processingState == OverviewViewModel.ProcessingState.DONE){
-                this.progressBar.setVisibility(View.GONE);
-                for (String value : activeTimers.keySet()) {
-                    if(activeTimers.get(value)!=null){
-                        activeTimers.get(value).cancel();
+            progressBar = findViewById(R.id.progressbar);
+            viewmodel.getProcessingState().observe(this, processingState -> {
+                    Log.i("TestLog2", "observe processing state: " + processingState);
+                    if (processingState == OverviewViewModel.ProcessingState.RUNNING_LONG) {
+                        progressBar.setVisibility(View.VISIBLE);
+                    } else if (processingState == OverviewViewModel.ProcessingState.DONE) {
+                        Log.i("TestLog2", "observe processing state done: " + "wann");
+                        Log.i("TestLog2", "progress"+progressBar.getVisibility());
+                        progressBar.setVisibility(View.GONE);
+                        for (String value : activeTimers.keySet()) {
+                            if (activeTimers.get(value) != null) {
+                                activeTimers.get(value).cancel();
+                            }
+                        }
+                        activeTimers.clear();
+                        if(listviewAdapter!=null)
+                            listviewAdapter.notifyDataSetChanged();
                     }
-                }
-                activeTimers.clear();
-                this.listviewAdapter.notifyDataSetChanged();
-             };
 
-        });
-
-
-
-        //if(isOnline) {
-
-            if (authManager.getCurrentUser() == null) {
-                // Kein Benutzer angemeldet -> zur Login-Seite weiterleiten
-                //startLoginActivity();
-
-            } else {
-                // Benutzer ist angemeldet -> App normal starten
-                Toast.makeText(this, "Willkommen, " + authManager.getCurrentUser().getEmail(), Toast.LENGTH_SHORT).show();
-                ((TextView) (findViewById(R.id.userNameTextview))).setText(authManager.getCurrentUser().getEmail());
-            }
-        //}
-
-        if(!viewmodel.isInitialised()) {
-            Log.i(LOG_TAG,"load data to be shown in list view...");
-            Log.i("TestLog2","load data to be shown in list view...");
-            viewmodel.readAllDataItems();
-            viewmodel.setInitialised(true);
-        }
-
-
-
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        // Swipe-Refresh-Listener hinzufügen
-        swipeRefreshLayout.setOnRefreshListener(() -> {
-            // Aktion ausführen, z. B. neue Daten laden
-            refreshData();
-
-            // Nach Abschluss der Aktion den Ladespinner ausblenden
-            swipeRefreshLayout.setRefreshing(false);
-        });
-
-// Optional: Überprüfen, ob getSupportActionBar() null ist
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("ToDo's");
-        }
-        if (getSupportActionBar() == null) {
-            Log.e("ToolbarError", "SupportActionBar konnte nicht initialisiert werden");
-        }
-
-        ImageButton logoutButton= findViewById(R.id.toolbar_button);
-        logoutButton.setOnClickListener(a ->{
-            authManager.logout();
-            startLoginActivity();
-        });
-
-        listView=findViewById(R.id.listview);
-
-
-
-        listviewAdapter= new ArrayAdapter<>(this,R.layout.activity_overview_structured_listitem_view,viewmodel.getDataItems()){
-
-
-
-            @NonNull
-            @Override
-            public View getView(int position, @Nullable View recyclableListItemView, @NonNull ViewGroup parent) {
-                Log.i(LOG_TAG, "getView() for position: "+position);
-                ActivityOverviewStructuredListitemViewBinding binding;
-                View listItemView=null;
-                DataItem listItem = getItem(position);
-
-
-
-                //If now view can be recycled we need to create a new one
-                if(recyclableListItemView == null) {
-                    binding = DataBindingUtil.inflate(getLayoutInflater(),R.layout.activity_overview_structured_listitem_view,null,false);
-                    listItemView = binding.getRoot();
-                    listItemView.setTag(binding);
-                 }
-                else {
-                    listItemView = recyclableListItemView;
-                    binding = (ActivityOverviewStructuredListitemViewBinding) listItemView.getTag();
-                }
-
-                binding.setItem(listItem);
-
-
-                setImageViewColor((ImageView)listItemView.findViewById(R.id.priorityIcon),listItem.getPrio());
-                ProgressBar progressbarOfEachElem= listItemView.findViewById(R.id.progressBarOfEachItem);
-                //Progress Text
-                TextView progressText = listItemView.findViewById(R.id.progressTextOfEachItem);
-                ConstraintLayout listItemContainer = listItemView.findViewById(R.id.listItemContainer);
-                Log.i("Debuger","positionViewElem"+position);
-
-                setTimersAndTextForEachListItem(position,listItemContainer,progressText,progressbarOfEachElem,listItemView,listItem);
-
-                // Delete-Button Klick-Listener
-                Button deleteButton = listItemView.findViewById(R.id.deleteButton);
-                deleteButton.setOnClickListener(v -> {
-                    deleteItem(position);
                 });
 
 
-                return listItemView;
 
 
+            viewmodel.setCrudOperations(crudOperations);
+            setOnlineStatus();
+
+            if (!viewmodel.isInitialised()) {
+                Log.i(LOG_TAG, "load data to be shown in list view...");
+                viewmodel.readAllDataItems();
+                viewmodel.setInitialised(true);
             }
 
-        };
 
+            Toolbar toolbar = findViewById(R.id.toolbar);
+            setSupportActionBar(toolbar);
 
+            swipeRefreshLayout.setOnRefreshListener(() -> {
+                // Aktion ausführen, z. B. neue Daten laden
+                refreshData();
 
-        listView.setAdapter(listviewAdapter);
-        listView.setOnItemLongClickListener((adapterView, view, position, id) -> {
-            // Zeige das Kontextmenü
-            showPopupMenu(view, position);
-            return true; // Rückgabe true, um den langen Klick zu konsumieren
-        });
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                DataItem selectedItem= listviewAdapter.getItem(position);
-                showDetailviewForItem(selectedItem);
+                // Nach Abschluss der Aktion den Ladespinner ausblenden
+                swipeRefreshLayout.setRefreshing(false);
+            });
+
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setTitle("ToDo's");
             }
-        });
-
-        FloatingActionButton addItems = findViewById(R.id.addButton);
-        addItems.setOnClickListener(view -> {
-            Intent callDetailViewForCreateIntent=new Intent(this,DetailviewActivity.class);
-            startActivityForResult(callDetailViewForCreateIntent,REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_CREATE);
+            if (getSupportActionBar() == null) {
+                Log.e("ToolbarError", "SupportActionBar konnte nicht initialisiert werden");
+            }
 
 
-        });
+            logoutButton.setOnClickListener(a -> {
+                authManager.logout();
+                startLoginActivity();
+            });
+
+            listView = findViewById(R.id.listview);
 
 
+            listviewAdapter = new ArrayAdapter<>(this, R.layout.activity_overview_structured_listitem_view, viewmodel.getDataItems()) {
 
+
+                @NonNull
+                @Override
+                public View getView(int position, @Nullable View recyclableListItemView, @NonNull ViewGroup parent) {
+                    Log.i(LOG_TAG, "getView() for position: " + position);
+                    ActivityOverviewStructuredListitemViewBinding binding;
+                    View listItemView = null;
+                    DataItem listItem = getItem(position);
+
+
+                    //If now view can be recycled we need to create a new one
+                    if (recyclableListItemView == null) {
+                        binding = DataBindingUtil.inflate(getLayoutInflater(), R.layout.activity_overview_structured_listitem_view, null, false);
+                        listItemView = binding.getRoot();
+                        listItemView.setTag(binding);
+                    } else {
+                        listItemView = recyclableListItemView;
+                        binding = (ActivityOverviewStructuredListitemViewBinding) listItemView.getTag();
+                    }
+
+                    binding.setItem(listItem);
+
+
+                    setImageViewColor((ImageView) listItemView.findViewById(R.id.priorityIcon), listItem.getPrio());
+                    ProgressBar progressbarOfEachElem = listItemView.findViewById(R.id.progressBarOfEachItem);
+                    //Progress Text
+                    TextView progressText = listItemView.findViewById(R.id.progressTextOfEachItem);
+                    ConstraintLayout listItemContainer = listItemView.findViewById(R.id.listItemContainer);
+                    Log.i("Debuger", "positionViewElem" + position);
+
+                    setTimersAndTextForEachListItem(position, listItemContainer, progressText, progressbarOfEachElem, listItemView, listItem);
+
+                    // Delete-Button Klick-Listener
+                    Button deleteButton = listItemView.findViewById(R.id.deleteButton);
+                    deleteButton.setOnClickListener(v -> {
+                        deleteItem(position);
+                    });
+
+
+                    return listItemView;
+
+
+                }
+
+            };
+
+
+            listView.setAdapter(listviewAdapter);
+            listView.setOnItemLongClickListener((adapterView, view, position, id) -> {
+                // Zeige das Kontextmenü
+                showPopupMenu(view, position);
+                return true; // Rückgabe true, um den langen Klick zu konsumieren
+            });
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    DataItem selectedItem = listviewAdapter.getItem(position);
+                    showDetailviewForItem(selectedItem);
+                }
+            });
+
+            FloatingActionButton addItems = findViewById(R.id.addButton);
+            addItems.setOnClickListener(view -> {
+                Intent callDetailViewForCreateIntent = new Intent(this, DetailviewActivity.class);
+                startActivityForResult(callDetailViewForCreateIntent, REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_CREATE);
+
+
+            });
+
+
+        } catch (Exception e) {
         }
-        catch (Exception e){
-        }
-        syncTodos();
+        syncTodos(true);
     }
 
     private void setOnlineStatus() {
@@ -260,14 +238,35 @@ public class OverviewActivity extends AppCompatActivity {
         ImageView connectionStatusImageView = findViewById(R.id.connection_status);
         // Überprüfen der Verbindung zum Backend
         new Thread(() -> {
+            logoutButton = findViewById(R.id.toolbar_button);
             boolean isConnected = ((DateItemApplication) getApplication()).checkAccessToBackend();
 
             if (isConnected) {
+                runOnUiThread(() -> {
+                    logoutButton.setEnabled(true);
+                        });
                 // Wenn verbunden, setze das grüne Icon
                 connectionStatusImageView.setImageResource(R.drawable.baseline_cloud_done_24);  // grünes Icon
+                //User weiterleiten wenn online und nicht registriert
+                if (authManager.getCurrentUser() == null) {
+                    // Kein Benutzer angemeldet -> zur Login-Seite weiterleiten
+                    startLoginActivity();
+
+                } else {
+                    runOnUiThread(() -> {
+                        Toast.makeText(this, "Willkommen, " + authManager.getCurrentUser().getEmail(), Toast.LENGTH_SHORT).show();
+                        ((TextView) (findViewById(R.id.userNameTextview))).setText(authManager.getCurrentUser().getEmail());
+                    });
+                }
+
             } else {
                 // Wenn nicht verbunden, setze das rote Icon
                 connectionStatusImageView.setImageResource(R.drawable.baseline_cloud_off_24);  // rotes Icon
+                runOnUiThread(() -> {
+                    logoutButton.setEnabled(false);
+                    Toast.makeText(this, "Willkommen, " + "Sie haben keine Verbindung", Toast.LENGTH_SHORT).show();
+                    ((TextView) (findViewById(R.id.userNameTextview))).setText("Keine Verbindung");
+                });
             }
         }).start();
 
@@ -287,7 +286,7 @@ public class OverviewActivity extends AppCompatActivity {
                     deleteItem(position);
                     return true;
                 case R.id.action_share:
-                   // shareItem(position);
+                    // shareItem(position);
                     return true;
                 default:
                     return false;
@@ -328,8 +327,8 @@ public class OverviewActivity extends AppCompatActivity {
                 .setMessage("Möchten Sie dieses Element wirklich löschen?")
                 .setPositiveButton("Ja", (dialog, which) -> {
                     // Timer stoppen, falls vorhanden
-                    Log.i("DebuggingTimers","val to Remove"+String.valueOf(position));
-                    synchronized(activeTimers) {
+                    Log.i("DebuggingTimers", "val to Remove" + String.valueOf(position));
+                    synchronized (activeTimers) {
                         CountDownTimer timer = activeTimers.remove(String.valueOf(position));
                         if (timer != null) {
                             timer.cancel();
@@ -355,7 +354,6 @@ public class OverviewActivity extends AppCompatActivity {
                     }).start();
 
 
-
                 })
                 .setNegativeButton("Abbrechen", (dialog, which) -> {
                     // Abbrechen, nichts tun
@@ -363,6 +361,7 @@ public class OverviewActivity extends AppCompatActivity {
                 })
                 .show();
     }
+
     private void setTimersAndTextForEachListItem(
             int position,
             ConstraintLayout listItemContainer,
@@ -383,30 +382,30 @@ public class OverviewActivity extends AppCompatActivity {
                     listItemView.getContext().getResources().getColor(R.color.todo_text_expired)
             );*/
             return;
-        }else{
-        // Setze den initialen Fortschritt
-        progressBar.setMax(100);
-        updateProgress(progressBar, progressText, remainingTime, totalTime);
+        } else {
+            // Setze den initialen Fortschritt
+            progressBar.setMax(100);
+            updateProgress(progressBar, progressText, remainingTime, totalTime);
 
-        // Starte den Timer
-        CountDownTimer timer= new CountDownTimer(remainingTime, 1000) { // Aktualisierung jede Sekunde
-            @Override
-            public void onTick(long millisUntilFinished) {
-                updateProgress(progressBar, progressText, millisUntilFinished, totalTime);
-            }
+            // Starte den Timer
+            CountDownTimer timer = new CountDownTimer(remainingTime, 1000) { // Aktualisierung jede Sekunde
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    updateProgress(progressBar, progressText, millisUntilFinished, totalTime);
+                }
 
-            @Override
-            public void onFinish() {
-                progressBar.setProgress(0);
-                progressText.setText(R.string.finish);
-                listItemContainer.setEnabled(false);
+                @Override
+                public void onFinish() {
+                    progressBar.setProgress(0);
+                    progressText.setText(R.string.finish);
+                    listItemContainer.setEnabled(false);
                 /*listItemContainer.setBackgroundColor(
                         listItemView.getContext().getResources().getColor(R.color.todo_text_expired)
                 );*/
-            }
-        }.start();
+                }
+            }.start();
             for (String value : activeTimers.keySet()) {
-                Log.i("DebuggingTimers","key: "+value);
+                Log.i("DebuggingTimers", "key: " + value);
             }
             if (!activeTimers.containsKey(String.valueOf(position))) {
                 activeTimers.put(String.valueOf(position), timer);
@@ -418,7 +417,7 @@ public class OverviewActivity extends AppCompatActivity {
     // Hilfsmethode zur Aktualisierung des Fortschritts
     private void updateProgress(ProgressBar progressBar, TextView progressText, long remainingTime, long totalTime) {
         int progress = (int) Math.round((remainingTime * 100.0) / totalTime);
-        Log.i("Debuger","progress: "+progress);
+        Log.i("Debuger", "progress: " + progress);
 
         progressBar.setProgress(progress);
         progressText.setText(progress + "%");
@@ -429,47 +428,53 @@ public class OverviewActivity extends AppCompatActivity {
         finish();
     }
 
-    protected void showDetailviewForItem(DataItem item){
-            Intent callDetailviewIntent = new Intent(this, DetailviewActivity.class);
-            callDetailviewIntent.putExtra(ARG_ITEM,item);
-            startActivityForResult(callDetailviewIntent, REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_EDIT);
-        }
+    protected void showDetailviewForItem(DataItem item) {
+        Intent callDetailviewIntent = new Intent(this, DetailviewActivity.class);
+        callDetailviewIntent.putExtra(ARG_ITEM, item);
+        startActivityForResult(callDetailviewIntent, REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_EDIT);
+    }
 
     private void refreshData() {
+        setOnlineStatus();
         new Thread(() -> {
-            List<DataItem> dataItems = ((DateItemApplication)getApplication()).getLocalCrudOperations().readAllDataItems();
+
+            List<DataItem> dataItems = ((DateItemApplication) getApplication()).getLocalCrudOperations().readAllDataItems();
             for (DataItem item : dataItems) {
                 Log.i(LOG_TAG, item.getName());
             }
 
         }).start();
 
-        setOnlineStatus();
         //syncTodos();
         // Neue Daten hinzufügen oder Aktion durchführen
-        Log.i("DebuggingTimers","timer size"+activeTimers.size());
+        Log.i("DebuggingTimers", "timer size" + activeTimers.size());
         for (String value : activeTimers.keySet()) {
-            Log.i("DebuggingTimers","key: "+value);
+            Log.i("DebuggingTimers", "key: " + value);
         }
 
         listviewAdapter.notifyDataSetChanged();
     }
 
-    private void syncTodos() {
-        viewmodel.getProcessingState().setValue(OverviewViewModel.ProcessingState.RUNNING_LONG);
+    private void syncTodos(boolean onInit) {
+        //Vielleicht wieder entkommentieren?
+        if(!onInit){
+            viewmodel.getProcessingState().setValue(OverviewViewModel.ProcessingState.RUNNING_LONG);
+        }
 
         new Thread(() -> {
-            boolean backendAvailable=((DateItemApplication) getApplication()).checkAccessToBackend();
-            IDataItemCRUDOperations localOperations=((DateItemApplication) getApplication()).getLocalCrudOperations();
-            IDataItemCRUDOperations remoteOperations=((DateItemApplication) getApplication()).getRemoteCrudOperations();
-            viewmodel.syncTodos(backendAvailable,localOperations, remoteOperations);
-           viewmodel.getProcessingState().postValue(OverviewViewModel.ProcessingState.DONE);
+            boolean backendAvailable = ((DateItemApplication) getApplication()).checkAccessToBackend();
+            IDataItemCRUDOperations localOperations = ((DateItemApplication) getApplication()).getLocalCrudOperations();
+            IDataItemCRUDOperations remoteOperations = ((DateItemApplication) getApplication()).getRemoteCrudOperations();
+            viewmodel.syncTodos(backendAvailable, localOperations, remoteOperations);
+            if(!onInit){
+                viewmodel.getProcessingState().postValue(OverviewViewModel.ProcessingState.DONE);
+            }
 
         }).start();
 
     }
 
-    private void setImageViewColor(ImageView priorityIcon,int priority){
+    private void setImageViewColor(ImageView priorityIcon, int priority) {
 
         switch (priority) {
             case 0: // Niedrige Priorität
@@ -499,13 +504,16 @@ public class OverviewActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_delete_local:
-                viewmodel.deleteAllLocalTodos(((DateItemApplication)getApplication()).getLocalCrudOperations());
+                viewmodel.deleteAllLocalTodos(((DateItemApplication) getApplication()).getLocalCrudOperations());
                 return true;
             case R.id.action_delete_remote:
-                viewmodel.deleteAllRemoteTodos(((DateItemApplication)getApplication()).getRemoteCrudOperations());
+                viewmodel.deleteAllRemoteTodos(((DateItemApplication) getApplication()).getRemoteCrudOperations());
                 return true;
             case R.id.action_sync:
-                syncTodos();
+                syncTodos(false);
+                return true;
+            case R.id.sortItems:
+                syncTodos(false);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -515,35 +523,30 @@ public class OverviewActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if(requestCode == REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_EDIT){
-            if(resultCode== OverviewActivity.RESULT_OK){
-                Log.i("TestLog","Results ok from detail view");
-                Log.i("TestLog",ARG_ITEM);
+        if (requestCode == REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_EDIT) {
+            if (resultCode == OverviewActivity.RESULT_OK) {
+                Log.i("TestLog", "Results ok from detail view");
+                Log.i("TestLog", ARG_ITEM);
 
-                DataItem itemFromDetailViewToBeModifiedInList =(DataItem) data.getSerializableExtra(ARG_ITEM);
+                DataItem itemFromDetailViewToBeModifiedInList = (DataItem) data.getSerializableExtra(ARG_ITEM);
 
                 viewmodel.updateDataItem(itemFromDetailViewToBeModifiedInList);
                 //CALL CRUD
-                Log.i("TestLog5","l: "+itemFromDetailViewToBeModifiedInList.getTbdDate());
-                Log.i("TestLog5",ARG_ITEM);
+                Log.i("TestLog5", "l: " + itemFromDetailViewToBeModifiedInList.getTbdDate());
+                Log.i("TestLog5", ARG_ITEM);
 
 
-            }
-            else {
+            } else {
                 showMessage("no results");
             }
-        }
-        else if(requestCode == REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_CREATE){
-            if(resultCode == OverviewActivity.RESULT_OK){
+        } else if (requestCode == REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_CREATE) {
+            if (resultCode == OverviewActivity.RESULT_OK) {
                 DataItem itemToBeCreated = (DataItem) data.getSerializableExtra(ARG_ITEM);
-               // listviewAdapter.add(itemToBeCreated);
+                // listviewAdapter.add(itemToBeCreated);
                 viewmodel.createDataItem(itemToBeCreated);
 
             }
-        }
-
-
-        else {
+        } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
 
@@ -552,26 +555,29 @@ public class OverviewActivity extends AppCompatActivity {
 
     private long calculateRemainingTime(DataItem item) {
         long currentTime = System.currentTimeMillis();
-        Log.i("timerlog", "Time: "+item.getTbdDate());
-        long endTime=0;
-        if(item.getTbdDate()!=null){
+        Log.i("timerlog", "Time: " + item.getTbdDate());
+        long endTime = 0;
+        if (item.getTbdDate() != null) {
             endTime = item.getTbdDate();
         }
-        long remainingTime=Math.max(0, endTime - currentTime);
-        Log.i("timerlog", "Remaining Time: "+remainingTime);
+        Log.i("timerlog", "endtime: " + endTime);
+        Log.i("timerlog", "current Time: " + currentTime);
+        long remainingTime = Math.max(0, endTime - currentTime);
+        Log.i("timerlog", "Remaining Time: " + remainingTime);
         return remainingTime;
     }
+
     private void monitorConnectionStatus() {
         db.collection("dataitems").document("dataitems")
-            .addSnapshotListener((snapshot, error) -> {
-                if (error != null) {
-                    updateCloudStatus(false); // Kein Zugriff -> Nicht verbunden
-                } else {
-                    isOnline=true;
-                    updateCloudStatus(true); // Verbunden
-                    setUserName();
-                }
-            });
+                .addSnapshotListener((snapshot, error) -> {
+                    if (error != null) {
+                        updateCloudStatus(false); // Kein Zugriff -> Nicht verbunden
+                    } else {
+                        isOnline = true;
+                        updateCloudStatus(true); // Verbunden
+                        setUserName();
+                    }
+                });
 
     }
 
@@ -580,7 +586,7 @@ public class OverviewActivity extends AppCompatActivity {
 
     private void updateCloudStatus(boolean isConnected) {
         ImageView cloudStatus = findViewById(R.id.connection_status);
-        Log.i("cloudStatusLog","connected? "+isConnected);
+        Log.i("cloudStatusLog", "connected? " + isConnected);
         if (isConnected) {
             cloudStatus.setColorFilter(Color.GREEN);
         } else {
@@ -590,18 +596,18 @@ public class OverviewActivity extends AppCompatActivity {
 
 
     private long calculateTotalTime(DataItem item) {
-        Log.i("TimerLog","Starttime: "+item.getStartTime());
-        Log.i("TimerLog","TBDtime: "+item.getTbdDate());
-        if(item.getStartTime()==null || item.getTbdDate()==null){
+        Log.i("TimerLog", "Starttime: " + item.getStartTime());
+        Log.i("TimerLog", "TBDtime: " + item.getTbdDate());
+        if (item.getStartTime() == null || item.getTbdDate() == null) {
 
             Calendar calendar = Calendar.getInstance();
-            calendar.add(0,1);
+            calendar.add(0, 1);
             item.setStartTime(calendar.getTimeInMillis());
         }
         Date startTime = new Date(item.getStartTime());
         Date tbdDate = new Date();
 
-        if(item.getTbdDate()!=null){
+        if (item.getTbdDate() != null) {
             tbdDate = new Date(item.getTbdDate());
         }
 
@@ -611,14 +617,14 @@ public class OverviewActivity extends AppCompatActivity {
         return 0;
     }
 
-    private void showMessage(String message){
-         Toast.makeText(OverviewActivity.this, message, Toast.LENGTH_SHORT).show();
+    private void showMessage(String message) {
+        Toast.makeText(OverviewActivity.this, message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.i(LOG_TAG,"ondestry");
+        Log.i(LOG_TAG, "ondestry");
         viewmodel.setCrudOperations(null);
 
     }
