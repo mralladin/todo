@@ -1,5 +1,7 @@
 package org.dieschnittstelle.mobile.android.todo.model;
 
+import org.dieschnittstelle.mobile.android.todo.viewmodel.OverviewViewModel;
+
 import java.util.List;
 
 public interface IDataItemCRUDOperations
@@ -15,5 +17,5 @@ public interface IDataItemCRUDOperations
 
     public Boolean deleteDataItem(DataItem item);
 
-    public Boolean syncDataItems();
+    public Boolean syncDataItems(OverviewViewModel model);
 }

@@ -17,6 +17,7 @@ import androidx.room.Update;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.dieschnittstelle.mobile.android.todo.util.DateConverter;
+import org.dieschnittstelle.mobile.android.todo.viewmodel.OverviewViewModel;
 
 import java.util.List;
 @Entity
@@ -120,7 +121,7 @@ public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperati
     }
 
     @Override
-    public Boolean syncDataItems() {
+    public Boolean syncDataItems(OverviewViewModel viewModel) {
         return true;
     }
 }

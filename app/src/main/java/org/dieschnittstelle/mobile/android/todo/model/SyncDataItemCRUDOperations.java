@@ -2,6 +2,8 @@ package org.dieschnittstelle.mobile.android.todo.model;
 
 import android.util.Log;
 
+import org.dieschnittstelle.mobile.android.todo.viewmodel.OverviewViewModel;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -55,7 +57,7 @@ public class SyncDataItemCRUDOperations implements IDataItemCRUDOperations{
     }
 
     @Override
-    public Boolean syncDataItems() {
+    public Boolean syncDataItems(OverviewViewModel viewModel) {
         List<DataItem> remoteItems = remoteCrud.readAllDataItems();
         List<DataItem> localItems = localCrud.readAllDataItems();
         //Es gibt Lokale Todo's
@@ -80,6 +82,7 @@ public class SyncDataItemCRUDOperations implements IDataItemCRUDOperations{
             //Alle Todos von Remote auf Local übertragen
             for(DataItem remoteItem : remoteItems){
                 localCrud.createDataItem(remoteItem);
+                viewModel.getDataItems().add(remoteItem);
             }
         }
         return true;

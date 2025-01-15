@@ -96,7 +96,7 @@ public class OverviewViewModel extends ViewModel   {
         new Thread(() -> {
             Log.i("CrudOps","processingState.getValue()"+processingState.getValue());
             Log.i("TestLog2", "sleep " + "before");
-            this.crudOperations.syncDataItems();
+            this.crudOperations.syncDataItems(this);
             try {
                 Thread.sleep(4000);
             } catch (InterruptedException e) {
@@ -117,14 +117,14 @@ public class OverviewViewModel extends ViewModel   {
         }).start();
     }
 
-    public void deleteAllLocalTodos(IDataItemCRUDOperations localOperationsparam, ArrayAdapter<DataItem> listview) {
+    public void deleteAllLocalTodos(IDataItemCRUDOperations localOperationsparam) {
         processingState.setValue(ProcessingState.RUNNING_LONG);
         new Thread(() -> {
             try {
                 List<DataItem> localTodos = localOperationsparam.readAllDataItems();
                 for (DataItem todo : localTodos) {
                     localOperationsparam.deleteDataItem(todo);
-                    listview.remove(todo);
+                    getDataItems().remove(todo);
                 }
                 Log.i("TODO_APP", "Alle lokalen Todos gelöscht.");
             } catch (Exception e) {

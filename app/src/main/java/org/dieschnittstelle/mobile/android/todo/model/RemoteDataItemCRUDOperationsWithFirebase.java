@@ -5,6 +5,8 @@ import android.util.Log;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.dieschnittstelle.mobile.android.todo.viewmodel.OverviewViewModel;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -90,7 +92,7 @@ public class RemoteDataItemCRUDOperationsWithFirebase implements IDataItemCRUDOp
     }
 
     @Override
-    public Boolean syncDataItems() {
+    public Boolean syncDataItems(OverviewViewModel viewModel) {
         return true;
     }
 

@@ -2,6 +2,8 @@ package org.dieschnittstelle.mobile.android.todo.model;
 
 import android.util.Log;
 
+import org.dieschnittstelle.mobile.android.todo.viewmodel.OverviewViewModel;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -101,7 +103,7 @@ public class RemoteDataItemCRUDOperationsWithRetrofit implements IDataItemCRUDOp
     }
 
     @Override
-    public Boolean syncDataItems() {
+    public Boolean syncDataItems(OverviewViewModel viewModel) {
         return true;
     }
 }

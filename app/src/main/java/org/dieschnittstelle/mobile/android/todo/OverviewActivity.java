@@ -340,10 +340,8 @@ public class OverviewActivity extends AppCompatActivity {
 
                     viewmodel.getProcessingState().setValue(OverviewViewModel.ProcessingState.RUNNING_LONG);
                     new Thread(() -> {
-
                         // Element aus der Datenbank entfernen
                         crudOperations.deleteDataItem(listItem);
-
                         // Element aus der lokalen Liste entfernen
                         runOnUiThread(() -> {
                             viewmodel.getDataItems().remove(position);
@@ -484,13 +482,19 @@ public class OverviewActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_delete_local:
-                viewmodel.deleteAllLocalTodos(((DateItemApplication) getApplication()).getLocalCrudOperations(),listviewAdapter);
+                viewmodel.deleteAllLocalTodos(((DateItemApplication) getApplication()).getLocalCrudOperations());
                 return true;
             case R.id.action_delete_remote:
                 viewmodel.deleteAllRemoteTodos(((DateItemApplication) getApplication()).getRemoteCrudOperations());
                 return true;
             case R.id.action_sync:
-                crudOperations.syncDataItems();
+                viewmodel.getProcessingState().setValue(OverviewViewModel.ProcessingState.RUNNING_LONG);
+                new Thread(() -> {
+                    crudOperations.syncDataItems(viewmodel);
+                    viewmodel.getProcessingState().postValue(OverviewViewModel.ProcessingState.DONE);
+
+                }
+                ).start();
                 return true;
             case R.id.sortItems:
                 this.viewmodel.sortItems("name");
