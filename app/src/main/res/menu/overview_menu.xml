@@ -13,5 +13,7 @@
         android:id="@+id/action_sync"
         android:title="Synchronisieren"
         app:showAsAction="never" />
-    <item android:id="@+id/sortItems" app:showAsAction="always" android:title="SORT" android:icon="@drawable/baseline_sort_24"/>
+    <item android:id="@+id/sortItems" app:showAsAction="always" android:title="SORT" android:icon="@drawable/baseline_sort_by_alpha_24"/>
+    <item android:id="@+id/sortItemsToPrio" app:showAsAction="always" android:title="SORT" android:icon="@drawable/baseline_sort_24"/>
+
 </menu>

@@ -36,7 +36,7 @@ public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperati
         public DataItem readItem(long id);
 
     }
-   @Database(entities = DataItem.class, version = 6)
+   @Database(entities = DataItem.class, version = 9)
    @TypeConverters({DateConverter.class}) // Converter hinzufügen
    public abstract static class DataItemDatabase extends RoomDatabase{
 
@@ -116,6 +116,11 @@ public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperati
                 .document(String.valueOf(item.getId()))
                 .delete();*/
 
+        return true;
+    }
+
+    @Override
+    public Boolean syncDataItems() {
         return true;
     }
 }

@@ -21,14 +21,19 @@ public class RemoteDataItemCRUDOperationsWithFirebase implements IDataItemCRUDOp
     @Override
     public DataItem createDataItem(DataItem item) {
         CompletableFuture<DataItem> future = new CompletableFuture<>();
-        todosCollection.add(item)
-                .addOnSuccessListener(documentReference -> {
-                    item.setFirebaseId(documentReference.getId());
+        String customFirebaseId = String.valueOf(item.getId());
+        item.setFirebaseId(customFirebaseId);
+
+        // Speichere das Item mit der ID in Firestore
+        todosCollection.document(customFirebaseId).set(item)
+                .addOnSuccessListener(unused -> {
                     future.complete(item);
                 })
-                .addOnFailureListener(future::completeExceptionally);
-        return future.join();
+                .addOnFailureListener(future::completeExceptionally); // Bei Fehler vervollständige mit Ausnahme
+
+        return future.join(); // Warte auf die Fertigstellung
     }
+
 
     @Override
     public List<DataItem> readAllDataItems() {
@@ -77,9 +82,16 @@ public class RemoteDataItemCRUDOperationsWithFirebase implements IDataItemCRUDOp
     @Override
     public Boolean deleteDataItem(DataItem item) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
+        Log.i("TestLog", "FirebaseId: " + item.getFirebaseId());
         todosCollection.document(item.getFirebaseId()).delete()
                 .addOnSuccessListener(unused -> future.complete(true))
                 .addOnFailureListener(e -> future.complete(false));
         return future.join();
     }
+
+    @Override
+    public Boolean syncDataItems() {
+        return true;
+    }
+
 }

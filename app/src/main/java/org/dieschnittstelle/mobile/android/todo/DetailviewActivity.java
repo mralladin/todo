@@ -2,6 +2,7 @@ package org.dieschnittstelle.mobile.android.todo;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.util.Log;
 
 import android.widget.Spinner;
@@ -147,6 +148,12 @@ public class DetailviewActivity extends AppCompatActivity {
 
         // Date in das gewünschte String-Format umwandeln
         return dateFormat.format(date);
+    }
+
+    public void addContact(){
+        Intent selectContactIntent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+
+
     }
 
 

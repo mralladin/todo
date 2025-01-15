@@ -15,5 +15,5 @@ public interface IDataItemCRUDOperations
 
     public Boolean deleteDataItem(DataItem item);
 
-
+    public Boolean syncDataItems();
 }

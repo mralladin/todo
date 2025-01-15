@@ -93,7 +93,6 @@ public class OverviewActivity extends AppCompatActivity {
         try {
             Future<IDataItemCRUDOperations> crudOperationsFuture = ((DateItemApplication) getApplication()).getCrudOperations();
             crudOperations = crudOperationsFuture.get();
-
             viewmodel = new ViewModelProvider(this).get(OverviewViewModel.class);
             progressBar = findViewById(R.id.progressbar);
             viewmodel.getProcessingState().observe(this, processingState -> {
@@ -230,7 +229,7 @@ public class OverviewActivity extends AppCompatActivity {
 
         } catch (Exception e) {
         }
-        syncTodos(true);
+       // syncTodos(true);
     }
 
     private void setOnlineStatus() {
@@ -455,25 +454,6 @@ public class OverviewActivity extends AppCompatActivity {
         listviewAdapter.notifyDataSetChanged();
     }
 
-    private void syncTodos(boolean onInit) {
-        //Vielleicht wieder entkommentieren?
-        if(!onInit){
-            viewmodel.getProcessingState().setValue(OverviewViewModel.ProcessingState.RUNNING_LONG);
-        }
-
-        new Thread(() -> {
-            boolean backendAvailable = ((DateItemApplication) getApplication()).checkAccessToBackend();
-            IDataItemCRUDOperations localOperations = ((DateItemApplication) getApplication()).getLocalCrudOperations();
-            IDataItemCRUDOperations remoteOperations = ((DateItemApplication) getApplication()).getRemoteCrudOperations();
-            viewmodel.syncTodos(backendAvailable, localOperations, remoteOperations);
-            if(!onInit){
-                viewmodel.getProcessingState().postValue(OverviewViewModel.ProcessingState.DONE);
-            }
-
-        }).start();
-
-    }
-
     private void setImageViewColor(ImageView priorityIcon, int priority) {
 
         switch (priority) {
@@ -504,16 +484,19 @@ public class OverviewActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_delete_local:
-                viewmodel.deleteAllLocalTodos(((DateItemApplication) getApplication()).getLocalCrudOperations());
+                viewmodel.deleteAllLocalTodos(((DateItemApplication) getApplication()).getLocalCrudOperations(),listviewAdapter);
                 return true;
             case R.id.action_delete_remote:
                 viewmodel.deleteAllRemoteTodos(((DateItemApplication) getApplication()).getRemoteCrudOperations());
                 return true;
             case R.id.action_sync:
-                syncTodos(false);
+                crudOperations.syncDataItems();
                 return true;
             case R.id.sortItems:
-                syncTodos(false);
+                this.viewmodel.sortItems("name");
+                return true;
+            case R.id.sortItemsToPrio:
+                this.viewmodel.sortItems("priority");
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

@@ -1,10 +1,13 @@
 package org.dieschnittstelle.mobile.android.todo.model;
 
 import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
+
+import com.google.gson.annotations.SerializedName;
 
 import org.dieschnittstelle.mobile.android.todo.util.DateConverter;
 
@@ -22,9 +25,6 @@ public class DataItem implements Serializable {
         return firebaseId;
     }
 
-    public void setFirebaseId(String firebaseId) {
-        this.firebaseId = firebaseId;
-    }
 
     private String firebaseId;
     private String name;
@@ -132,6 +132,10 @@ public class DataItem implements Serializable {
 
     public Long getStartTime() {
         return startTime;
+    }
+
+    public void setFirebaseId(String firebaseId) {
+        this.firebaseId = firebaseId;
     }
 
     public void setStartTime(Long startTime) {

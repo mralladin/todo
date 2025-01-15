@@ -1,6 +1,8 @@
 package org.dieschnittstelle.mobile.android.todo.viewmodel;
 
 import android.util.Log;
+import android.view.View;
+import android.widget.ArrayAdapter;
 
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -11,6 +13,7 @@ import org.dieschnittstelle.mobile.android.todo.model.LocalDataItemCRUDOperation
 import org.dieschnittstelle.mobile.android.todo.model.RemoteDataItemCRUDOperationsWithFirebase;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,50 +24,20 @@ public class OverviewViewModel extends ViewModel   {
         return this.processingState;
     }
 
-    public void deleteAllLocalTodos(IDataItemCRUDOperations localOperationsparam) {
-        processingState.setValue(ProcessingState.RUNNING_LONG);
-        new Thread(() -> {
-            try {
-                List<DataItem> localTodos = localOperationsparam.readAllDataItems();
-                for (DataItem todo : localTodos) {
-                    deleteDataItemFromSpecificCrud( localOperationsparam,todo);
-                }
-                Log.i("TODO_APP", "Alle lokalen Todos gelöscht.");
-            } catch (Exception e) {
-                Log.e("TODO_APP", "Fehler beim Löschen lokaler Todos: " + e.getMessage(), e);
-            }
-            processingState.postValue(ProcessingState.DONE);
-
-        }).start();
-    }
-
-    public void deleteAllRemoteTodos(IDataItemCRUDOperations remoteOperationsparam) {
-        processingState.setValue(ProcessingState.RUNNING_LONG);
-        new Thread(() -> {
-            try {
-                List<DataItem> remoteTodos = remoteOperationsparam.readAllDataItems();
-                for (DataItem todo : remoteTodos) {
-                    deleteDataItemFromSpecificCrud( remoteOperationsparam,todo);
-                }
-
-                Log.i("TODO_APP", "Alle Remote-Todos gelöscht.");
-            } catch (Exception e) {
-                Log.e("TODO_APP", "Fehler beim Löschen von Remote-Todos: " + e.getMessage(), e);
-            }
-            processingState.postValue(ProcessingState.DONE);
-
-        }).start();
-    }
 
     public static enum ProcessingState {RUNNING, DONE,RUNNING_LONG};
     private ExecutorService executorService = Executors.newFixedThreadPool(2);
     private static String LOG_TAG = "OverviewActivityViewModel";
 
-    //46:00
-
     private IDataItemCRUDOperations crudOperations;
 
     private MutableLiveData<ProcessingState> processingState = new MutableLiveData<>();
+
+    private static Comparator<DataItem> SORT_BY_CHECKED_AND_NAME = Comparator.comparing(DataItem::isChecked).thenComparing(DataItem::getName);
+
+    private static Comparator<DataItem> SORT_BY_CHECKED_AND_PRIORITY = Comparator.comparing(DataItem::isChecked).reversed().thenComparing(DataItem::getPrio).reversed();
+
+    private Comparator<DataItem> currentSorter = SORT_BY_CHECKED_AND_NAME;
 
     private List<DataItem> dataItems = new ArrayList<>();
     private boolean initialised;
@@ -87,52 +60,8 @@ public class OverviewViewModel extends ViewModel   {
         this.crudOperations = crudOperations;
     }
 
-    public void deleteDataItemFromSpecificCrud( IDataItemCRUDOperations specificCrudOperations,DataItem itemToBeDeleted) {
-            specificCrudOperations.deleteDataItem(itemToBeDeleted);
-            getDataItems().remove(itemToBeDeleted);
-    }
-
-    public void syncTodos(boolean backendAvailable,IDataItemCRUDOperations localOperations, IDataItemCRUDOperations remoteOperations) {
-        new Thread(() -> {
-            try {
-                if (backendAvailable) {
-                    // Check for local todos
-                    List<DataItem> localTodos = localOperations.readAllDataItems();
-                    if (localTodos != null && !localTodos.isEmpty()) {
-                        Log.i(LOG_TAG, "Local todos found, syncing to backend...");
-                        // Delete all remote todos
-                        List<DataItem> remoteTodos = remoteOperations.readAllDataItems();
-                        for (DataItem remoteTodo : remoteTodos) {
-                            remoteOperations.deleteDataItem(remoteTodo);
-                            getDataItems().remove(remoteTodo);
-                        }
-                        // Upload local todos to backend
-                        for (DataItem localTodo : localTodos) {
-                            remoteOperations.createDataItem(localTodo);
-                            getDataItems().add(localTodo);
-                        }
-                        Log.i(LOG_TAG, "Sync to backend complete.");
-                    } else {
-                        Log.i(LOG_TAG, "No local todos found, syncing from backend...");
-                        // Fetch todos from backend and save locally
-                        List<DataItem> remoteTodos = remoteOperations.readAllDataItems();
-                        for (DataItem remoteTodo : remoteTodos) {
-                            localOperations.createDataItem(remoteTodo);
-                            getDataItems().add(remoteTodo);
-                        }
-
-                        Log.i(LOG_TAG, "Sync from backend complete.");
-                    }
-                } else {
-                    Log.e(LOG_TAG, "Backend not available, skipping sync.");
-                }
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "Error during sync: " + e.getMessage(), e);
-            }
 
 
-        }).start();
-    }
 
     public void createDataItem(DataItem itemToBeCreated) {
         processingState.setValue(ProcessingState.RUNNING_LONG);
@@ -141,9 +70,25 @@ public class OverviewViewModel extends ViewModel   {
             getDataItems().add(createdItem);
             processingState.postValue(ProcessingState.DONE);
         }).start();;
-
+        sortItems("");
     }
 
+
+    public void setSorter(Comparator<DataItem> sorter){
+        this.currentSorter = sorter;
+    }
+
+    public void sortItems(String method){
+        if(method.equals("priority")){
+            setSorter(SORT_BY_CHECKED_AND_PRIORITY);
+        }else if(method.equals("name")){
+            setSorter(SORT_BY_CHECKED_AND_NAME);
+        }
+
+        processingState.setValue(ProcessingState.RUNNING);
+        getDataItems().sort(this.currentSorter);
+        processingState.postValue(ProcessingState.DONE);
+    }
 
     public void readAllDataItems() {
         processingState.setValue(ProcessingState.RUNNING_LONG);
@@ -151,20 +96,59 @@ public class OverviewViewModel extends ViewModel   {
         new Thread(() -> {
             Log.i("CrudOps","processingState.getValue()"+processingState.getValue());
             Log.i("TestLog2", "sleep " + "before");
+            this.crudOperations.syncDataItems();
             try {
-                Thread.sleep(8000);
+                Thread.sleep(4000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
             Log.i("TestLog2", "sleep " + "after");
             //Data to be shown
             Log.i("CrudOps","2"+this.crudOperations);
-            //BUG#1 RACE Condition fix because of register???
             if(this.crudOperations!=null){
                 List<DataItem> items = this.crudOperations.readAllDataItems();
+                for (DataItem item : items) {
+                    Log.i("TestLog2", "item: " + item.getFirebaseId());
+                }
+
                 getDataItems().addAll(items);
             }
             processingState.postValue(ProcessingState.DONE);
+        }).start();
+    }
+
+    public void deleteAllLocalTodos(IDataItemCRUDOperations localOperationsparam, ArrayAdapter<DataItem> listview) {
+        processingState.setValue(ProcessingState.RUNNING_LONG);
+        new Thread(() -> {
+            try {
+                List<DataItem> localTodos = localOperationsparam.readAllDataItems();
+                for (DataItem todo : localTodos) {
+                    localOperationsparam.deleteDataItem(todo);
+                    listview.remove(todo);
+                }
+                Log.i("TODO_APP", "Alle lokalen Todos gelöscht.");
+            } catch (Exception e) {
+                Log.e("TODO_APP", "Fehler beim Löschen lokaler Todos: " + e.getMessage(), e);
+            }
+            processingState.postValue(ProcessingState.DONE);
+        }).start();
+    }
+
+    public void deleteAllRemoteTodos(IDataItemCRUDOperations remoteOperationsparam) {
+        processingState.setValue(ProcessingState.RUNNING_LONG);
+        new Thread(() -> {
+            try {
+                List<DataItem> remoteTodos = remoteOperationsparam.readAllDataItems();
+                for (DataItem todo : remoteTodos) {
+                    remoteOperationsparam.deleteDataItem(todo);
+                }
+
+                Log.i("TODO_APP", "Alle Remote-Todos gelöscht.");
+            } catch (Exception e) {
+                Log.e("TODO_APP", "Fehler beim Löschen von Remote-Todos: " + e.getMessage(), e);
+            }
+            processingState.postValue(ProcessingState.DONE);
+
         }).start();
     }
 
@@ -186,9 +170,8 @@ public class OverviewViewModel extends ViewModel   {
                 existingItemInList.setChecked(itemFromDetailViewToBeModifiedInList.isChecked());
                 processingState.postValue(ProcessingState.DONE);
             }
-
-
         });
+        sortItems("");
 
 
     }

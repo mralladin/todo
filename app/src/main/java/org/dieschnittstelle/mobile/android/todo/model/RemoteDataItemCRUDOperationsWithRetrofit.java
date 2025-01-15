@@ -99,4 +99,9 @@ public class RemoteDataItemCRUDOperationsWithRetrofit implements IDataItemCRUDOp
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public Boolean syncDataItems() {
+        return true;
+    }
 }

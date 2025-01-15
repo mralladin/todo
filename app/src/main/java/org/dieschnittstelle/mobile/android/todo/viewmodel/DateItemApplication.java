@@ -13,6 +13,7 @@ import org.dieschnittstelle.mobile.android.todo.model.IDataItemCRUDOperations;
 import org.dieschnittstelle.mobile.android.todo.model.LocalDataItemCRUDOperationsWithRoom;
 import org.dieschnittstelle.mobile.android.todo.model.RemoteDataItemCRUDOperationsWithFirebase;
 import org.dieschnittstelle.mobile.android.todo.model.RemoteDataItemCRUDOperationsWithRetrofit;
+import org.dieschnittstelle.mobile.android.todo.model.SyncDataItemCRUDOperations;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -86,10 +87,14 @@ public class DateItemApplication extends Application {
             localCrudOperations =  new LocalDataItemCRUDOperationsWithRoom(this);
             remoteCrudOperations = new RemoteDataItemCRUDOperationsWithFirebase();
             if(backendAvailable){
-                this.crudOperations = new RemoteDataItemCRUDOperationsWithFirebase();
+                RemoteDataItemCRUDOperationsWithFirebase remoteCrudOperations = new RemoteDataItemCRUDOperationsWithFirebase();
+                LocalDataItemCRUDOperationsWithRoom localCrudOperations = new LocalDataItemCRUDOperationsWithRoom(this);
+                //this.crudOperations = new RemoteDataItemCRUDOperationsWithFirebase();
+                this.crudOperations = new SyncDataItemCRUDOperations(remoteCrudOperations,localCrudOperations);
             } else {
                 this.crudOperations = new LocalDataItemCRUDOperationsWithRoom(this);
             }
+            //Initialer Sync
             future.complete(this.crudOperations);
         }).start();
         return  future;

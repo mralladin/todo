@@ -40,6 +40,7 @@
     </com.google.android.material.checkbox.MaterialCheckBox>
 
 
+    <!--            android:text="@={viewmodel.item.description}"-->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/itemDescription"
         android:layout_width="match_parent"
@@ -52,7 +53,7 @@
             android:gravity="start"
             android:lines="15"
             android:minLines="15"
-            android:text="@={viewmodel.item.description}"
+            android:text="@={viewmodel.item.firebaseId}"
             android:layout_height="wrap_content"
             />
     </com.google.android.material.textfield.TextInputLayout>
