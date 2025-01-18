@@ -13,7 +13,9 @@ import org.dieschnittstelle.mobile.android.todo.model.LocalDataItemCRUDOperation
 import org.dieschnittstelle.mobile.android.todo.model.RemoteDataItemCRUDOperationsWithFirebase;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,6 +24,45 @@ public class OverviewViewModel extends ViewModel   {
 
     public MutableLiveData<ProcessingState> getProcessingState() {
         return this.processingState;
+    }
+
+    public void addExampleData() {
+        //Add new DataItems to crud operations with name a,b,c,d,e,f,g,h,i,j,k,l and prio 0,1,2,3 and
+        Calendar calender = Calendar.getInstance();
+        Long currentTime = calender.getTimeInMillis();
+        DataItem a = new DataItem("a",getRandomPrio(),getCurrentTimePlusMinutes(60),currentTime);
+        DataItem b = new DataItem("b",getRandomPrio(),getCurrentTimePlusMinutes(120),currentTime);
+        DataItem c = new DataItem("c",getRandomPrio(),getCurrentTimePlusMinutes(180),currentTime);
+        DataItem d = new DataItem("d",getRandomPrio(),getCurrentTimePlusMinutes(240),currentTime);
+        DataItem e = new DataItem("e",getRandomPrio(),getCurrentTimePlusMinutes(300),currentTime);
+        DataItem f = new DataItem("f",getRandomPrio(),getCurrentTimePlusMinutes(360),currentTime);
+        DataItem g = new DataItem("g",getRandomPrio(),getCurrentTimePlusMinutes(420),currentTime);
+        DataItem h = new DataItem("h",getRandomPrio(),getCurrentTimePlusMinutes(480),currentTime);
+        new Thread(()->{
+        this.crudOperations.createDataItem(a);
+        this.crudOperations.createDataItem(b);
+        this.crudOperations.createDataItem(c);
+        this.crudOperations.createDataItem(d);
+        this.crudOperations.createDataItem(e);
+        this.crudOperations.createDataItem(f);
+        this.crudOperations.createDataItem(g);
+        this.crudOperations.createDataItem(h);
+        }).start();
+        getDataItems().addAll( List.of(a,b,c,d,e,f,g,h));
+    }
+
+    //get Random int beetween 0 and 3 0 and 3 included
+    public int getRandomPrio(){
+        return (int) (Math.random() * 4);
+    }
+
+    //Method which returns long value of current date plus added minutes in long
+    public long getCurrentTimePlusMinutes(int minutes){
+        Calendar calender = Calendar.getInstance();
+        Long currentTime = calender.getTimeInMillis();
+        calender.setTimeInMillis(currentTime);
+        calender.add(Calendar.MINUTE, minutes);
+        return calender.getTimeInMillis();
     }
 
 
@@ -94,23 +135,14 @@ public class OverviewViewModel extends ViewModel   {
         processingState.setValue(ProcessingState.RUNNING_LONG);
 
         new Thread(() -> {
-            Log.i("CrudOps","processingState.getValue()"+processingState.getValue());
-            Log.i("TestLog2", "sleep " + "before");
             this.crudOperations.syncDataItems(this);
             try {
                 Thread.sleep(4000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            Log.i("TestLog2", "sleep " + "after");
-            //Data to be shown
-            Log.i("CrudOps","2"+this.crudOperations);
             if(this.crudOperations!=null){
                 List<DataItem> items = this.crudOperations.readAllDataItems();
-                for (DataItem item : items) {
-                    Log.i("TestLog2", "item: " + item.getFirebaseId());
-                }
-
                 getDataItems().addAll(items);
             }
             processingState.postValue(ProcessingState.DONE);
@@ -157,7 +189,7 @@ public class OverviewViewModel extends ViewModel   {
         processingState.setValue(ProcessingState.RUNNING_LONG);
         executorService.execute(() -> {
             boolean updated = this.crudOperations.updateDataItem(itemFromDetailViewToBeModifiedInList);
-
+            Log.e("TestLog5", "updated: " + updated);
             if(updated) {
                 //showMessage(getString(R.string.on_result_from_detailview_msg) + itemFromDetailViewToBeModifiedInList.getName());
                 int itemPosition = getDataItems().indexOf(itemFromDetailViewToBeModifiedInList);
@@ -166,7 +198,7 @@ public class OverviewViewModel extends ViewModel   {
                 existingItemInList.setName(itemFromDetailViewToBeModifiedInList.getName());
                 existingItemInList.setDescription(itemFromDetailViewToBeModifiedInList.getDescription());
                 existingItemInList.setPrio(itemFromDetailViewToBeModifiedInList.getPrio());
-
+                existingItemInList.setTbdDate(itemFromDetailViewToBeModifiedInList.getTbdDate());
                 existingItemInList.setChecked(itemFromDetailViewToBeModifiedInList.isChecked());
                 processingState.postValue(ProcessingState.DONE);
             }

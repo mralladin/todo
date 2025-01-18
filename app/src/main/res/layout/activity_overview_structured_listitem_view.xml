@@ -36,27 +36,18 @@
     app:layout_constraintTop_toTopOf="parent"
     >
 </TextView>
-    <!--     <TextView
-         android:text="@={item.name}"
+    <TextView
          android:id="@+id/timeleft"
          android:layout_width="wrap_content"
          android:layout_height="wrap_content"
          android:textSize="12sp"
          android:padding="10dp"
+         app:formattedDate="@{item.tbdDate}"
          app:layout_constraintTop_toTopOf="parent"
          app:layout_constraintBottom_toBottomOf="parent"
          app:layout_constraintEnd_toStartOf="@+id/priorityIcon"
          >
-     </TextView>-->
-<include
-        android:id="@+id/progressBarContainer"
-        layout="@layout/progress_bar_with_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/priorityIcon"
-/>
+     </TextView>
 
 
     <ImageView

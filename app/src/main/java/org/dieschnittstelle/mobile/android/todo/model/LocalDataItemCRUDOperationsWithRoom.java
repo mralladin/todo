@@ -37,7 +37,7 @@ public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperati
         public DataItem readItem(long id);
 
     }
-   @Database(entities = DataItem.class, version = 9)
+   @Database(entities = DataItem.class, version = 10)
    @TypeConverters({DateConverter.class}) // Converter hinzufügen
    public abstract static class DataItemDatabase extends RoomDatabase{
 

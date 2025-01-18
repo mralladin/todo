@@ -50,7 +50,7 @@ public class SyncDataItemCRUDOperations implements IDataItemCRUDOperations{
 
     @Override
     public Boolean deleteDataItem(DataItem item) {
-        if(localCrud.deleteDataItem(item)){
+        if(item!=null&&localCrud.deleteDataItem(item)){
             remoteCrud.deleteDataItem(item);
         }
         return true;

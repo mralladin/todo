@@ -38,6 +38,7 @@ public class DataItem implements Serializable {
     private Long tbdDate;
     //Wann das DataItem gestartet wurde
     private Long startTime;
+    private Boolean timeOver;
 
     public long getId() {
         return id;
@@ -50,6 +51,14 @@ public class DataItem implements Serializable {
     @Ignore
     public DataItem(String name) {
         this.name = name;
+    }
+
+    //For creating example DataITems
+    public DataItem(String name,int prio,Long tbdDate,Long startTime) {
+        this.name = name;
+        this.prio = prio;
+        this.tbdDate = tbdDate;
+        this.startTime = startTime;
     }
 
     public Long getTbdDate() {
@@ -140,5 +149,13 @@ public class DataItem implements Serializable {
 
     public void setStartTime(Long startTime) {
         this.startTime = startTime;
+    }
+
+    public Boolean getTimeOver() {
+        return timeOver;
+    }
+
+    public void setTimeOver(Boolean timeOver) {
+        this.timeOver = timeOver;
     }
 }

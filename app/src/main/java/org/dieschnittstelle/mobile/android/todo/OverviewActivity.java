@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -72,7 +73,6 @@ public class OverviewActivity extends AppCompatActivity {
     private AuthManager authManager;
     private ImageButton logoutButton;
 
-
     FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     protected final int REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_EDIT = 1;
@@ -80,10 +80,11 @@ public class OverviewActivity extends AppCompatActivity {
     private IDataItemCRUDOperations crudOperations;
     private ProgressBar progressBar;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i("TestLog0", "here?");
         authManager = new AuthManager();
         setContentView(R.layout.activity_overview);
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
@@ -103,21 +104,13 @@ public class OverviewActivity extends AppCompatActivity {
                         Log.i("TestLog2", "observe processing state done: " + "wann");
                         Log.i("TestLog2", "progress"+progressBar.getVisibility());
                         progressBar.setVisibility(View.GONE);
-                        for (String value : activeTimers.keySet()) {
-                            if (activeTimers.get(value) != null) {
-                                activeTimers.get(value).cancel();
-                            }
-                        }
-                        activeTimers.clear();
+
+                        viewmodel.sortItems("");
                         if(listviewAdapter!=null)
                             listviewAdapter.notifyDataSetChanged();
                     }
 
                 });
-
-
-
-
             viewmodel.setCrudOperations(crudOperations);
             setOnlineStatus();
 
@@ -127,12 +120,12 @@ public class OverviewActivity extends AppCompatActivity {
                 viewmodel.setInitialised(true);
             }
 
-
             Toolbar toolbar = findViewById(R.id.toolbar);
             setSupportActionBar(toolbar);
 
             swipeRefreshLayout.setOnRefreshListener(() -> {
                 // Aktion ausführen, z. B. neue Daten laden
+
                 refreshData();
 
                 // Nach Abschluss der Aktion den Ladespinner ausblenden
@@ -155,7 +148,10 @@ public class OverviewActivity extends AppCompatActivity {
             listView = findViewById(R.id.listview);
 
 
+
             listviewAdapter = new ArrayAdapter<>(this, R.layout.activity_overview_structured_listitem_view, viewmodel.getDataItems()) {
+
+
 
 
                 @NonNull
@@ -182,12 +178,11 @@ public class OverviewActivity extends AppCompatActivity {
 
                     setImageViewColor((ImageView) listItemView.findViewById(R.id.priorityIcon), listItem.getPrio());
                     ProgressBar progressbarOfEachElem = listItemView.findViewById(R.id.progressBarOfEachItem);
+                    CheckBox checkBoxOfEachElem = listItemView.findViewById(R.id.itemChecked);
                     //Progress Text
                     TextView progressText = listItemView.findViewById(R.id.progressTextOfEachItem);
                     ConstraintLayout listItemContainer = listItemView.findViewById(R.id.listItemContainer);
-                    Log.i("Debuger", "positionViewElem" + position);
-
-                    setTimersAndTextForEachListItem(position, listItemContainer, progressText, progressbarOfEachElem, listItemView, listItem);
+                    setTimersAndTextForEachListItem(position, listItemContainer, progressText, progressbarOfEachElem, checkBoxOfEachElem,listItemView, listItem);
 
                     // Delete-Button Klick-Listener
                     Button deleteButton = listItemView.findViewById(R.id.deleteButton);
@@ -195,11 +190,17 @@ public class OverviewActivity extends AppCompatActivity {
                         deleteItem(position);
                     });
 
+                    checkBoxOfEachElem.setOnClickListener(v -> {
+                        viewmodel.updateDataItem(listItem);
+                      viewmodel.sortItems("");
+                    });
+
 
                     return listItemView;
 
 
                 }
+
 
             };
 
@@ -214,7 +215,10 @@ public class OverviewActivity extends AppCompatActivity {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     DataItem selectedItem = listviewAdapter.getItem(position);
-                    showDetailviewForItem(selectedItem);
+                    if(selectedItem.getTimeOver()==null||!selectedItem.getTimeOver()){
+                        showDetailviewForItem(selectedItem);
+                    }
+
                 }
             });
 
@@ -226,10 +230,12 @@ public class OverviewActivity extends AppCompatActivity {
 
             });
 
+            viewmodel.sortItems("");
 
         } catch (Exception e) {
+            e.printStackTrace();
         }
-       // syncTodos(true);
+
     }
 
     private void setOnlineStatus() {
@@ -263,6 +269,7 @@ public class OverviewActivity extends AppCompatActivity {
                 connectionStatusImageView.setImageResource(R.drawable.baseline_cloud_off_24);  // rotes Icon
                 runOnUiThread(() -> {
                     logoutButton.setEnabled(false);
+                    logoutButton.setVisibility(View.GONE);
                     Toast.makeText(this, "Willkommen, " + "Sie haben keine Verbindung", Toast.LENGTH_SHORT).show();
                     ((TextView) (findViewById(R.id.userNameTextview))).setText("Keine Verbindung");
                 });
@@ -325,18 +332,6 @@ public class OverviewActivity extends AppCompatActivity {
                 .setTitle("Löschen bestätigen")
                 .setMessage("Möchten Sie dieses Element wirklich löschen?")
                 .setPositiveButton("Ja", (dialog, which) -> {
-                    // Timer stoppen, falls vorhanden
-                    Log.i("DebuggingTimers", "val to Remove" + String.valueOf(position));
-                    synchronized (activeTimers) {
-                        CountDownTimer timer = activeTimers.remove(String.valueOf(position));
-                        if (timer != null) {
-                            timer.cancel();
-                            Log.i("DebuggingTimers", "Timer für Position " + position + " wurde entfernt.");
-                        } else {
-                            Log.w("DebuggingTimers", "Kein Timer für Position " + position + " gefunden.");
-                        }
-                    }
-
 
                     viewmodel.getProcessingState().setValue(OverviewViewModel.ProcessingState.RUNNING_LONG);
                     new Thread(() -> {
@@ -364,61 +359,39 @@ public class OverviewActivity extends AppCompatActivity {
             ConstraintLayout listItemContainer,
             TextView progressText,
             ProgressBar progressBar,
+            CheckBox checkBox,
             View listItemView,
             DataItem listItem) {
-
         // Berechne verbleibende Zeit und Gesamtzeit
         long remainingTime = calculateRemainingTime(listItem);
         long totalTime = calculateTotalTime(listItem);
         // Verhindere Division durch 0
         if (remainingTime <= 0) {
-            progressBar.setProgress(0);
-            progressText.setText(R.string.finish);
-            listItemContainer.setEnabled(false);
-            /*listItemContainer.setBackgroundColor(
-                    listItemView.getContext().getResources().getColor(R.color.todo_text_expired)
-            );*/
-            return;
+            //show listItem.getTbdDate() to DDMMYYYY HH:MM
+
+            Log.i("IsDisable", listItem.getName()+" "+listItem.getTbdDate());
+            disableProgressBar(listItem, checkBox);
         } else {
+            enableProgressBar(listItem, checkBox);
             // Setze den initialen Fortschritt
-            progressBar.setMax(100);
-            updateProgress(progressBar, progressText, remainingTime, totalTime);
+            //updateProgress(progressBar, progressText, remainingTime, totalTime);
 
-            // Starte den Timer
-            CountDownTimer timer = new CountDownTimer(remainingTime, 1000) { // Aktualisierung jede Sekunde
-                @Override
-                public void onTick(long millisUntilFinished) {
-                    updateProgress(progressBar, progressText, millisUntilFinished, totalTime);
-                }
-
-                @Override
-                public void onFinish() {
-                    progressBar.setProgress(0);
-                    progressText.setText(R.string.finish);
-                    listItemContainer.setEnabled(false);
-                /*listItemContainer.setBackgroundColor(
-                        listItemView.getContext().getResources().getColor(R.color.todo_text_expired)
-                );*/
-                }
-            }.start();
-            for (String value : activeTimers.keySet()) {
-                Log.i("DebuggingTimers", "key: " + value);
-            }
-            if (!activeTimers.containsKey(String.valueOf(position))) {
-                activeTimers.put(String.valueOf(position), timer);
-            }
 
         }
     }
 
-    // Hilfsmethode zur Aktualisierung des Fortschritts
-    private void updateProgress(ProgressBar progressBar, TextView progressText, long remainingTime, long totalTime) {
-        int progress = (int) Math.round((remainingTime * 100.0) / totalTime);
-        Log.i("Debuger", "progress: " + progress);
-
-        progressBar.setProgress(progress);
-        progressText.setText(progress + "%");
+    //disable Progressbar,Text,Button,CheckBox
+    private void disableProgressBar(DataItem listItem, CheckBox checkBox) {
+            listItem.setTimeOver(true);
+            checkBox.setEnabled(false);
     }
+    //enable Progressbar,Text,Button,CheckBox
+    private void enableProgressBar(DataItem listItem, CheckBox checkBox) {
+        listItem.setTimeOver(false);
+        checkBox.setEnabled(true);
+    }
+
+
 
     private void startLoginActivity() {
         startActivity(new Intent(this, LoginActivity.class));
@@ -433,23 +406,8 @@ public class OverviewActivity extends AppCompatActivity {
 
     private void refreshData() {
         setOnlineStatus();
-        new Thread(() -> {
-
-            List<DataItem> dataItems = ((DateItemApplication) getApplication()).getLocalCrudOperations().readAllDataItems();
-            for (DataItem item : dataItems) {
-                Log.i(LOG_TAG, item.getName());
-            }
-
-        }).start();
-
-        //syncTodos();
-        // Neue Daten hinzufügen oder Aktion durchführen
-        Log.i("DebuggingTimers", "timer size" + activeTimers.size());
-        for (String value : activeTimers.keySet()) {
-            Log.i("DebuggingTimers", "key: " + value);
-        }
-
-        listviewAdapter.notifyDataSetChanged();
+        if(listviewAdapter!=null)
+            listviewAdapter.notifyDataSetChanged();
     }
 
     private void setImageViewColor(ImageView priorityIcon, int priority) {
@@ -474,7 +432,8 @@ public class OverviewActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.overview_menu, menu); // Verknüpft die Menü-XML-Datei
+        // Verknüpft die Menü-XML-Datei
+        inflater.inflate(R.menu.overview_menu, menu);
         return true;
     }
 
@@ -487,12 +446,14 @@ public class OverviewActivity extends AppCompatActivity {
             case R.id.action_delete_remote:
                 viewmodel.deleteAllRemoteTodos(((DateItemApplication) getApplication()).getRemoteCrudOperations());
                 return true;
+            case R.id.addExampleData:
+                viewmodel.addExampleData();
+                return true;
             case R.id.action_sync:
                 viewmodel.getProcessingState().setValue(OverviewViewModel.ProcessingState.RUNNING_LONG);
                 new Thread(() -> {
                     crudOperations.syncDataItems(viewmodel);
                     viewmodel.getProcessingState().postValue(OverviewViewModel.ProcessingState.DONE);
-
                 }
                 ).start();
                 return true;
@@ -508,6 +469,8 @@ public class OverviewActivity extends AppCompatActivity {
     }
 
 
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_EDIT) {
@@ -518,9 +481,6 @@ public class OverviewActivity extends AppCompatActivity {
                 DataItem itemFromDetailViewToBeModifiedInList = (DataItem) data.getSerializableExtra(ARG_ITEM);
 
                 viewmodel.updateDataItem(itemFromDetailViewToBeModifiedInList);
-                //CALL CRUD
-                Log.i("TestLog5", "l: " + itemFromDetailViewToBeModifiedInList.getTbdDate());
-                Log.i("TestLog5", ARG_ITEM);
 
 
             } else {
@@ -536,6 +496,7 @@ public class OverviewActivity extends AppCompatActivity {
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+
 
 
     }
@@ -554,32 +515,6 @@ public class OverviewActivity extends AppCompatActivity {
         return remainingTime;
     }
 
-    private void monitorConnectionStatus() {
-        db.collection("dataitems").document("dataitems")
-                .addSnapshotListener((snapshot, error) -> {
-                    if (error != null) {
-                        updateCloudStatus(false); // Kein Zugriff -> Nicht verbunden
-                    } else {
-                        isOnline = true;
-                        updateCloudStatus(true); // Verbunden
-                        setUserName();
-                    }
-                });
-
-    }
-
-    private void setUserName() {
-    }
-
-    private void updateCloudStatus(boolean isConnected) {
-        ImageView cloudStatus = findViewById(R.id.connection_status);
-        Log.i("cloudStatusLog", "connected? " + isConnected);
-        if (isConnected) {
-            cloudStatus.setColorFilter(Color.GREEN);
-        } else {
-            cloudStatus.setColorFilter(Color.RED);
-        }
-    }
 
 
     private long calculateTotalTime(DataItem item) {
@@ -599,7 +534,7 @@ public class OverviewActivity extends AppCompatActivity {
         }
 
         if (startTime != null && tbdDate != null) {
-            return tbdDate.getTime() - startTime.getTime(); // Dauer in Millisekunden
+            return tbdDate.getTime() - startTime.getTime();
         }
         return 0;
     }

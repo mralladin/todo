@@ -1,19 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item
-        android:id="@+id/action_delete_local"
-        android:title="Lösche lokale Todos"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_delete_remote"
-        android:title="Lösche Remote-Todos"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_sync"
-        android:title="Synchronisieren"
-        app:showAsAction="never" />
+    <item  android:id="@+id/action_delete_local" android:title="Lösche lokale Todos"  app:showAsAction="never" />
+    <item android:id="@+id/action_delete_remote"   android:title="Lösche Remote-Todos"  app:showAsAction="never" />
+    <item android:id="@+id/action_sync"  android:title="Synchronisieren"  app:showAsAction="never" />
+    <item android:id="@+id/addExampleData"  android:title="Add Example Data"  app:showAsAction="never" />
     <item android:id="@+id/sortItems" app:showAsAction="always" android:title="SORT" android:icon="@drawable/baseline_sort_by_alpha_24"/>
     <item android:id="@+id/sortItemsToPrio" app:showAsAction="always" android:title="SORT" android:icon="@drawable/baseline_sort_24"/>
+
 
 </menu>
