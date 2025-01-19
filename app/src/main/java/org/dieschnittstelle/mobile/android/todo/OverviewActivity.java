@@ -1,14 +1,9 @@
 package org.dieschnittstelle.mobile.android.todo;
 
-import static java.lang.String.format;
-
 import android.content.Intent;
-import android.graphics.Color;
 import android.icu.util.Calendar;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -39,44 +34,36 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.dieschnittstelle.mobile.android.skeleton.R;
 import org.dieschnittstelle.mobile.android.skeleton.databinding.ActivityOverviewStructuredListitemViewBinding;
 import org.dieschnittstelle.mobile.android.todo.model.DataItem;
 import org.dieschnittstelle.mobile.android.todo.model.IDataItemCRUDOperations;
-import org.dieschnittstelle.mobile.android.todo.model.LocalDataItemCRUDOperationsWithRoom;
-import org.dieschnittstelle.mobile.android.todo.model.RemoteDataItemCRUDOperationsWithRetrofit;
 import org.dieschnittstelle.mobile.android.todo.security.AuthManager;
 import org.dieschnittstelle.mobile.android.todo.viewmodel.DateItemApplication;
 import org.dieschnittstelle.mobile.android.todo.viewmodel.OverviewViewModel;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class OverviewActivity extends AppCompatActivity {
 
-    private ListView listView;
-    private ArrayAdapter<DataItem> listviewAdapter;
     public static String ARG_ITEM = "item";
-    private SwipeRefreshLayout swipeRefreshLayout;
-    private boolean isOnline = false;
-    private OverviewViewModel viewmodel;
-    private static String LOG_TAG = "OverviewActivity";
-    private HashMap<String, CountDownTimer> activeTimers = new HashMap<>();
-    private AuthManager authManager;
-    private ImageButton logoutButton;
-
-    FirebaseFirestore db = FirebaseFirestore.getInstance();
-
+    private static final String LOG_TAG = "OverviewActivity";
     protected final int REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_EDIT = 1;
     protected final int REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_CREATE = 2;
+    protected final int RESULT_TO_DELETE = 9;
+
+    private ListView listView;
+    private ArrayAdapter<DataItem> listviewAdapter;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private final boolean isOnline = false;
+    private OverviewViewModel viewmodel;
+    private final HashMap<String, CountDownTimer> activeTimers = new HashMap<>();
+    private AuthManager authManager;
+    private ImageButton logoutButton;
     private IDataItemCRUDOperations crudOperations;
     private ProgressBar progressBar;
 
@@ -95,16 +82,16 @@ public class OverviewActivity extends AppCompatActivity {
             viewmodel = new ViewModelProvider(this).get(OverviewViewModel.class);
             progressBar = findViewById(R.id.progressbar);
             viewmodel.getProcessingState().observe(this, processingState -> {
-                    if (processingState == OverviewViewModel.ProcessingState.RUNNING_LONG) {
-                        progressBar.setVisibility(View.VISIBLE);
-                    } else if (processingState == OverviewViewModel.ProcessingState.DONE) {
-                        progressBar.setVisibility(View.GONE);
-                        if(listviewAdapter!=null)
-                            listviewAdapter.notifyDataSetChanged();
-                    }
+                if (processingState == OverviewViewModel.ProcessingState.RUNNING_LONG) {
+                    progressBar.setVisibility(View.VISIBLE);
+                } else if (processingState == OverviewViewModel.ProcessingState.DONE) {
+                    progressBar.setVisibility(View.GONE);
+                    if (listviewAdapter != null)
+                        listviewAdapter.notifyDataSetChanged();
+                }
 
 
-                });
+            });
             viewmodel.setCrudOperations(crudOperations);
             setOnlineStatus();
 
@@ -142,11 +129,7 @@ public class OverviewActivity extends AppCompatActivity {
             listView = findViewById(R.id.listview);
 
 
-
             listviewAdapter = new ArrayAdapter<>(this, R.layout.activity_overview_structured_listitem_view, viewmodel.getDataItems()) {
-
-
-
 
                 @NonNull
                 @Override
@@ -170,13 +153,13 @@ public class OverviewActivity extends AppCompatActivity {
                     binding.setItem(listItem);
 
 
-                    setImageViewColor((ImageView) listItemView.findViewById(R.id.priorityIcon), listItem.getPrio());
+                    setImageViewColor(listItemView.findViewById(R.id.priorityIcon), listItem.getPrio());
                     ProgressBar progressbarOfEachElem = listItemView.findViewById(R.id.progressBarOfEachItem);
                     CheckBox checkBoxOfEachElem = listItemView.findViewById(R.id.itemChecked);
                     //Progress Text
                     TextView progressText = listItemView.findViewById(R.id.progressTextOfEachItem);
                     ConstraintLayout listItemContainer = listItemView.findViewById(R.id.listItemContainer);
-                    setTimersAndTextForEachListItem(position, listItemContainer, progressText, progressbarOfEachElem, checkBoxOfEachElem,listItemView, listItem);
+                    setTimersAndTextForEachListItem(position, listItemContainer, progressText, progressbarOfEachElem, checkBoxOfEachElem, listItemView, listItem);
 
                     // Delete-Button Klick-Listener
                     Button deleteButton = listItemView.findViewById(R.id.deleteButton);
@@ -186,7 +169,7 @@ public class OverviewActivity extends AppCompatActivity {
 
                     checkBoxOfEachElem.setOnClickListener(v -> {
                         viewmodel.updateDataItem(listItem);
-                      viewmodel.sortItems("");
+                        viewmodel.sortItems("");
                     });
 
 
@@ -209,7 +192,7 @@ public class OverviewActivity extends AppCompatActivity {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     DataItem selectedItem = listviewAdapter.getItem(position);
-                    if(selectedItem.getTimeOver()==null||!selectedItem.getTimeOver()){
+                    if (selectedItem.getTimeOver() == null || !selectedItem.getTimeOver()) {
                         showDetailviewForItem(selectedItem);
                     }
 
@@ -219,6 +202,8 @@ public class OverviewActivity extends AppCompatActivity {
             FloatingActionButton addItems = findViewById(R.id.addButton);
             addItems.setOnClickListener(view -> {
                 Intent callDetailViewForCreateIntent = new Intent(this, DetailviewActivity.class);
+                callDetailViewForCreateIntent.putExtra("REQUEST_CODE", REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_CREATE);
+
                 startActivityForResult(callDetailViewForCreateIntent, REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_CREATE);
 
 
@@ -243,7 +228,7 @@ public class OverviewActivity extends AppCompatActivity {
             if (isConnected) {
                 runOnUiThread(() -> {
                     logoutButton.setEnabled(true);
-                        });
+                });
                 // Wenn verbunden, setze das grüne Icon
                 connectionStatusImageView.setImageResource(R.drawable.baseline_cloud_done_24);  // grünes Icon
                 //User weiterleiten wenn online und nicht registriert
@@ -363,7 +348,7 @@ public class OverviewActivity extends AppCompatActivity {
         if (remainingTime <= 0) {
             //show listItem.getTbdDate() to DDMMYYYY HH:MM
 
-            Log.i("IsDisable", listItem.getName()+" "+listItem.getTbdDate());
+            Log.i("IsDisable", listItem.getName() + " " + listItem.getTbdDate());
             disableProgressBar(listItem, checkBox);
         } else {
             enableProgressBar(listItem, checkBox);
@@ -376,15 +361,15 @@ public class OverviewActivity extends AppCompatActivity {
 
     //disable Progressbar,Text,Button,CheckBox
     private void disableProgressBar(DataItem listItem, CheckBox checkBox) {
-            listItem.setTimeOver(true);
-            checkBox.setEnabled(false);
+        listItem.setTimeOver(true);
+        checkBox.setEnabled(false);
     }
+
     //enable Progressbar,Text,Button,CheckBox
     private void enableProgressBar(DataItem listItem, CheckBox checkBox) {
         listItem.setTimeOver(false);
         checkBox.setEnabled(true);
     }
-
 
 
     private void startLoginActivity() {
@@ -400,7 +385,7 @@ public class OverviewActivity extends AppCompatActivity {
 
     private void refreshData() {
         setOnlineStatus();
-        if(listviewAdapter!=null)
+        if (listviewAdapter != null)
             listviewAdapter.notifyDataSetChanged();
     }
 
@@ -463,10 +448,30 @@ public class OverviewActivity extends AppCompatActivity {
     }
 
 
-
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        Log.i(LOG_TAG, "Results To Delete from detail view"+requestCode+resultCode);
+
+        if (resultCode == RESULT_TO_DELETE) {
+            DataItem itemToBeDeleted = (DataItem) data.getSerializableExtra(ARG_ITEM);
+            Log.i(LOG_TAG, "Results To Delete from detail view"+requestCode);
+            viewmodel.getProcessingState().setValue(OverviewViewModel.ProcessingState.RUNNING_LONG);
+            new Thread(() -> {
+                // Element aus der Datenbank entfernen
+                crudOperations.deleteDataItem(itemToBeDeleted);
+                // Element aus der lokalen Liste entfernen
+                runOnUiThread(() -> {
+                    //delete item from listviewAdapter and notify adapter
+                    int position = viewmodel.getDataItems().indexOf(itemToBeDeleted);
+                    viewmodel.getDataItems().remove(position);
+                    viewmodel.getProcessingState().postValue(OverviewViewModel.ProcessingState.DONE);
+                    Toast.makeText(OverviewActivity.this, itemToBeDeleted.getName() + " gelöscht", Toast.LENGTH_SHORT).show();
+                });
+            }).start();
+        }
+
+
+
         if (requestCode == REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_EDIT) {
             if (resultCode == OverviewActivity.RESULT_OK) {
                 Log.i("TestLog", "Results ok from detail view");
@@ -487,10 +492,9 @@ public class OverviewActivity extends AppCompatActivity {
                 viewmodel.createDataItem(itemToBeCreated);
 
             }
-        } else {
+        }  else {
             super.onActivityResult(requestCode, resultCode, data);
         }
-
 
 
     }
@@ -504,7 +508,6 @@ public class OverviewActivity extends AppCompatActivity {
         long remainingTime = Math.max(0, endTime - currentTime);
         return remainingTime;
     }
-
 
 
     private long calculateTotalTime(DataItem item) {

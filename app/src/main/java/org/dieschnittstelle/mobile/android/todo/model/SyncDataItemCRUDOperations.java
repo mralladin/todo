@@ -4,15 +4,14 @@ import android.util.Log;
 
 import org.dieschnittstelle.mobile.android.todo.viewmodel.OverviewViewModel;
 
-import java.util.Collections;
 import java.util.List;
 
-public class SyncDataItemCRUDOperations implements IDataItemCRUDOperations{
-    private RemoteDataItemCRUDOperationsWithFirebase remoteCrud;
-    private LocalDataItemCRUDOperationsWithRoom localCrud;
-    private static String LOG_TAG = "SyncDataItemCRUDOperations";
+public class SyncDataItemCRUDOperations implements IDataItemCRUDOperations {
+    private static final String LOG_TAG = "SyncDataItemCRUDOperations";
+    private final RemoteDataItemCRUDOperationsWithFirebase remoteCrud;
+    private final LocalDataItemCRUDOperationsWithRoom localCrud;
 
-    public SyncDataItemCRUDOperations(RemoteDataItemCRUDOperationsWithFirebase remoteCrudOperations, LocalDataItemCRUDOperationsWithRoom localCrudOperations){
+    public SyncDataItemCRUDOperations(RemoteDataItemCRUDOperationsWithFirebase remoteCrudOperations, LocalDataItemCRUDOperationsWithRoom localCrudOperations) {
         remoteCrud = remoteCrudOperations;
         localCrud = localCrudOperations;
     }
@@ -42,7 +41,7 @@ public class SyncDataItemCRUDOperations implements IDataItemCRUDOperations{
 
     @Override
     public Boolean updateDataItem(DataItem item) {
-        if(localCrud.updateDataItem(item)){
+        if (localCrud.updateDataItem(item)) {
             remoteCrud.updateDataItem(item);
         }
         return true;
@@ -50,41 +49,40 @@ public class SyncDataItemCRUDOperations implements IDataItemCRUDOperations{
 
     @Override
     public Boolean deleteDataItem(DataItem item) {
-        if(item!=null&&localCrud.deleteDataItem(item)){
+        if (item != null && localCrud.deleteDataItem(item)) {
             remoteCrud.deleteDataItem(item);
         }
         return true;
     }
 
     @Override
-    public Boolean syncDataItems(OverviewViewModel viewModel) {
+    public void syncDataItems(OverviewViewModel viewModel) {
         List<DataItem> remoteItems = remoteCrud.readAllDataItems();
         List<DataItem> localItems = localCrud.readAllDataItems();
         //Es gibt Lokale Todo's
-        if(!localCrud.readAllDataItems().isEmpty()){
+        if (!localCrud.readAllDataItems().isEmpty()) {
             //Lösche jedes Remote Item
-            for(DataItem remoteItem : remoteItems){
+            for (DataItem remoteItem : remoteItems) {
                 remoteCrud.deleteDataItem(remoteItem);
             }
             //Füge jedes Local Item nach dem Remote hinzu
-            for(DataItem localItem : localItems){
-                DataItem remoteItem=remoteCrud.createDataItem(localItem);
+            for (DataItem localItem : localItems) {
+                DataItem remoteItem = remoteCrud.createDataItem(localItem);
                 localCrud.readDataItem(localItem.getId()).setFirebaseId(remoteItem.getFirebaseId());
                 //Log localItem FirebaseId
                 Log.i("TestLog", "LocalItem FirebaseId: " + localItem.getFirebaseId());
             }
-            for(DataItem remoteItem : remoteCrud.readAllDataItems()){
+            for (DataItem remoteItem : remoteCrud.readAllDataItems()) {
                 Log.i("TestLog", "RemoteItem FirebaseId: " + remoteItem.getFirebaseId());
             }
         }
         //Es gibt keine Lokalen Todo's
-        else{
+        else {
             //Alle Todos von Remote auf Local übertragen
-            for(DataItem remoteItem : remoteItems){
+            for (DataItem remoteItem : remoteItems) {
                 localCrud.createDataItem(remoteItem);
                 viewModel.getDataItems().add(remoteItem);
             }
         }
-        return true;
     }
 }

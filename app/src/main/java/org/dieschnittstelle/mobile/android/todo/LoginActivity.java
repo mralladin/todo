@@ -22,10 +22,10 @@ import org.dieschnittstelle.mobile.android.skeleton.R;
 
 public class LoginActivity extends AppCompatActivity {
 
+    protected static final String LOG_TAG = LoginActivity.class.getName();
     private EditText inputEmail, inputPassword, inputUsername;
     private Button btnRegister, btnLogin;
     private ProgressBar progressBar;
-    protected static final String LOG_TAG = LoginActivity.class.getName();
     private FirebaseAuth auth;
 
     @Override
@@ -79,8 +79,7 @@ public class LoginActivity extends AppCompatActivity {
     private void handleRegister() {
         String email = inputEmail.getText().toString().trim();
         String password = inputPassword.getText().toString().trim();
-        validateEmailAndPassword( email,  password);
-
+        validateEmailAndPassword(email, password);
 
 
         progressBar.setVisibility(View.VISIBLE);
@@ -107,8 +106,8 @@ public class LoginActivity extends AppCompatActivity {
                 });
     }
 
-    private void validateEmailAndPassword(String email, String password){
-        if (!isValidEmail(email)&&!isValidPassword(password)) {
+    private void validateEmailAndPassword(String email, String password) {
+        if (!isValidEmail(email) && !isValidPassword(password)) {
             inputPassword.setError("Passwort muss genau 6 Zeichen lang sein und nur Ziffern enthalten");
             inputEmail.setError("Ungültige E-Mail-Adresse");
             return;
@@ -121,7 +120,6 @@ public class LoginActivity extends AppCompatActivity {
 
         if (!isValidPassword(password)) {
             inputPassword.setError("Passwort muss genau 6 Zeichen lang sein");
-            return;
         }
     }
 
@@ -129,7 +127,7 @@ public class LoginActivity extends AppCompatActivity {
     private void handleLogin() {
         String email = inputEmail.getText().toString().trim();
         String password = inputPassword.getText().toString().trim();
-        validateEmailAndPassword( email,  password);
+        validateEmailAndPassword(email, password);
 
         progressBar.setVisibility(View.VISIBLE);
 
@@ -154,11 +152,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void checkUsernameAvailability(String username, UsernameCallback callback) {
         // Simulierte Überprüfung des Benutzernamens (Firebase Firestore könnte hier integriert werden)
-        if ("testuser".equalsIgnoreCase(username)) {
-            callback.onResult(false);
-        } else {
-            callback.onResult(true);
-        }
+        callback.onResult(!"testuser".equalsIgnoreCase(username));
     }
 
     private boolean isValidEmail(String email) {
@@ -166,8 +160,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private boolean isValidPassword(String password) {
-        Log.i(LOG_TAG,"PaAsswordCheck"+ (password.length() == 6&&password.matches("[0-9]+")));
-        return password.length() == 6&&password.matches("[0-9]+");
+        Log.i(LOG_TAG, "PaAsswordCheck" + (password.length() == 6 && password.matches("[0-9]+")));
+        return password.length() == 6 && password.matches("[0-9]+");
     }
 
     interface UsernameCallback {

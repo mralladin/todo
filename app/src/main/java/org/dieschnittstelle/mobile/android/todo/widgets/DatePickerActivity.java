@@ -11,38 +11,37 @@ import android.widget.TimePicker;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.dieschnittstelle.mobile.android.skeleton.R;
-import org.dieschnittstelle.mobile.android.todo.OverviewActivity;
 
 import java.text.SimpleDateFormat;
-import java.time.LocalTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import java.util.TimeZone;
 
 public class DatePickerActivity extends Activity {
-    /** Called when the activity is first created. */
+    /**
+     * Called when the activity is first created.
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.datepicker);
 
         // der DatePicker
-        DatePicker picker = (DatePicker)findViewById(R.id.datepicker);
-        TimePicker timepicker = (TimePicker) findViewById(R.id.timepicker);
+        DatePicker picker = findViewById(R.id.datepicker);
+        TimePicker timepicker = findViewById(R.id.timepicker);
         timepicker.setIs24HourView(true);
         Calendar calendar = Calendar.getInstance();
-        Log.i("Debuger","calendar in date picker "+calendar.getTime());
+        Log.i("Debuger", "calendar in date picker " + calendar.getTime());
         int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
-        calendar.add(Calendar.MINUTE,4);
+        calendar.add(Calendar.MINUTE, 4);
         int currentMinute = calendar.get(Calendar.MINUTE);
-        Log.i("DateLogg,","hour"+currentHour);
+        Log.i("DateLogg,", "hour" + currentHour);
         timepicker.setHour(currentHour);
         timepicker.setMinute(currentMinute);
 
 
         // das Textfeld zur textuellen Darstellung des Datums
-        final TextView dateAsText = (TextView)findViewById(R.id.dateAsText);
+        final TextView dateAsText = findViewById(R.id.dateAsText);
         FloatingActionButton saveDateButton = findViewById(R.id.saveDateButton);
         dateAsText.setText(new Date().toString());
 

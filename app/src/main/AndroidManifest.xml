@@ -18,13 +18,14 @@
             android:exported="true"
             android:label="DataAccess"
             >
+
+        </activity>
+        <activity android:name="org.dieschnittstelle.mobile.android.todo.OverviewActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <activity android:name="org.dieschnittstelle.mobile.android.todo.OverviewActivity">
-
         </activity>
         <activity android:name="org.dieschnittstelle.mobile.android.todo.widgets.DatePickerActivity" />
         <activity android:name="org.dieschnittstelle.mobile.android.todo.LoginActivity" />

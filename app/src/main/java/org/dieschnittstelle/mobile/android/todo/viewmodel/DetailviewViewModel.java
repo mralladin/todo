@@ -9,9 +9,12 @@ import androidx.lifecycle.ViewModel;
 
 import org.dieschnittstelle.mobile.android.todo.model.DataItem;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class DetailviewViewModel extends ViewModel {
 
-    private MutableLiveData<Boolean> itemValidOnSave = new MutableLiveData<>(false);
+    private MutableLiveData<Boolean> itemValidOnSaveOrDelete = new MutableLiveData<>(false);
 
 
     private static String LOG_TAG = DetailviewViewModel.class.getName();
@@ -31,8 +34,28 @@ public class DetailviewViewModel extends ViewModel {
 
     public void saveItem(){
         Log.i(LOG_TAG,"save item");
-        itemValidOnSave.setValue(true);
+        itemValidOnSaveOrDelete.setValue(true);
 
+    }
+
+    public void addContactName(String contactId) {
+        if (contactId != null && !contactId.isEmpty()) {
+            // Aktuelle Liste abrufen
+            List<String> currentList = contactIds.getValue();
+            if (currentList != null && !currentList.contains(contactId)) {
+                currentList.add(contactId); // Kontakt hinzufügen
+                contactIds.setValue(currentList); // Liste aktualisieren
+                Log.i(LOG_TAG, "Contact Name added: " + contactId);
+            } else {
+                Log.i(LOG_TAG, "Contact Name already exists or currentList is null");
+            }
+        }
+    }
+
+    private final MutableLiveData<List<String>> contactIds = new MutableLiveData<>(new ArrayList<>());
+
+    public LiveData<List<String>> getContactIds() {
+        return contactIds;
     }
 
     public void setItem(DataItem item) {
@@ -40,7 +63,7 @@ public class DetailviewViewModel extends ViewModel {
     }
 
     public MutableLiveData<Boolean> getValidOnSave() {
-        return this.itemValidOnSave;
+        return this.itemValidOnSaveOrDelete;
     }
 
     public boolean checkFieldInputValid(int keyId){

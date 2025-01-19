@@ -1,18 +1,16 @@
 package org.dieschnittstelle.mobile.android.todo.model;
 
 import androidx.annotation.NonNull;
-import androidx.room.ColumnInfo;
+import androidx.room.Embedded;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
-import com.google.gson.annotations.SerializedName;
-
 import org.dieschnittstelle.mobile.android.todo.util.DateConverter;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.Objects;
 
 @Entity
@@ -20,25 +18,47 @@ public class DataItem implements Serializable {
 
     @PrimaryKey(autoGenerate = true)
     private long id;
-
-    public String getFirebaseId() {
-        return firebaseId;
-    }
-
-
     private String firebaseId;
     private String name;
     private String description;
     private boolean checked;
     private String useridcreated;
     private String useridassigned;
-    private int prio=0;
+    private int prio = 0;
     @TypeConverters(DateConverter.class) // Verwende einen Converter für Room
     //Wann das DataItem fertig ist
     private Long tbdDate;
     //Wann das DataItem gestartet wurde
     private Long startTime;
     private Boolean timeOver;
+    @Ignore
+    public DataItem(String name) {
+        this.name = name;
+    }
+
+    //For creating example DataITems
+    public DataItem(String name, int prio, Long tbdDate, Long startTime) {
+        this.name = name;
+        this.prio = prio;
+        this.tbdDate = tbdDate;
+        this.startTime = startTime;
+    }
+
+    // when writing to local db: [1,2,3] -> "1;; 2;; 3"
+    //when reading from local db: "1;; 2;; 3" -> [1,2,3]
+    @TypeConverters(LocalDataItemCRUDOperationsWithRoom.ArrayListConverters.class)
+    private ArrayList<String> contactIds;
+
+    public DataItem() {
+    }
+
+    public String getFirebaseId() {
+        return firebaseId;
+    }
+
+    public void setFirebaseId(String firebaseId) {
+        this.firebaseId = firebaseId;
+    }
 
     public long getId() {
         return id;
@@ -46,19 +66,6 @@ public class DataItem implements Serializable {
 
     public void setId(long id) {
         this.id = id;
-    }
-
-    @Ignore
-    public DataItem(String name) {
-        this.name = name;
-    }
-
-    //For creating example DataITems
-    public DataItem(String name,int prio,Long tbdDate,Long startTime) {
-        this.name = name;
-        this.prio = prio;
-        this.tbdDate = tbdDate;
-        this.startTime = startTime;
     }
 
     public Long getTbdDate() {
@@ -75,9 +82,6 @@ public class DataItem implements Serializable {
 
     public void setPrio(int prio) {
         this.prio = prio;
-    }
-
-    public DataItem() {
     }
 
     public String getUseridcreated() {
@@ -120,11 +124,7 @@ public class DataItem implements Serializable {
         this.checked = checked;
     }
 
-    @NonNull
-    @Override
-    public String toString() {
-        return getName();
-    }
+
 
     @Override
     public boolean equals(Object o) {
@@ -143,10 +143,6 @@ public class DataItem implements Serializable {
         return startTime;
     }
 
-    public void setFirebaseId(String firebaseId) {
-        this.firebaseId = firebaseId;
-    }
-
     public void setStartTime(Long startTime) {
         this.startTime = startTime;
     }
@@ -157,5 +153,29 @@ public class DataItem implements Serializable {
 
     public void setTimeOver(Boolean timeOver) {
         this.timeOver = timeOver;
+    }
+
+    public ArrayList<String> getContactIds() {
+        if(contactIds == null){
+            contactIds = new ArrayList<>();
+        }
+        return contactIds;
+    }
+
+    public void setContactIds(ArrayList<String> contactIds) {
+        this.contactIds = contactIds;
+    }
+
+
+    @Override
+    public String toString() {
+        return "DataItem{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", checked=" + checked +
+                ", contactId='" + contactIds + '\'' +
+                ", prio=" + prio;
+
     }
 }

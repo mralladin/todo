@@ -1,7 +1,6 @@
 package org.dieschnittstelle.mobile.android.todo.model;
 
 import android.content.Context;
-import android.util.Log;
 
 import androidx.room.Dao;
 import androidx.room.Database;
@@ -11,6 +10,7 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.room.TypeConverter;
 import androidx.room.TypeConverters;
 import androidx.room.Update;
 
@@ -19,42 +19,22 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import org.dieschnittstelle.mobile.android.todo.util.DateConverter;
 import org.dieschnittstelle.mobile.android.todo.viewmodel.OverviewViewModel;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
 @Entity
-public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperations{
-    @Dao
-    public static interface SQLiteDataItemCRUDOperations{
-        @Insert
-        public long createItem(DataItem item);
-        @Update
-        public void updateItem(DataItem item);
-        @Delete
-
-        public void  deleteItem(DataItem item);
-        @Query("SELECT * FROM dataitem")
-        public List<DataItem> readAllItems();
-        @Query("SELECT * FROM dataitem WHERE id=(:id)")
-        public DataItem readItem(long id);
-
-    }
-   @Database(entities = DataItem.class, version = 10)
-   @TypeConverters({DateConverter.class}) // Converter hinzufügen
-   public abstract static class DataItemDatabase extends RoomDatabase{
-
-        public abstract SQLiteDataItemCRUDOperations getDao();
-    }
-
+public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperations {
     public static String LOG_TAG = "DATA_ITEMS";
-    private SQLiteDataItemCRUDOperations localDao;
+    private final SQLiteDataItemCRUDOperations localDao;
     private FirebaseFirestore firestore;
-
     private DataItemDatabase db;
-    public LocalDataItemCRUDOperationsWithRoom(Context context ){
+    public LocalDataItemCRUDOperationsWithRoom(Context context) {
         // Room-Setup
         DataItemDatabase db = Room.databaseBuilder(
-                context.getApplicationContext(),
-                DataItemDatabase.class,
-                "dataitems-db")
+                        context.getApplicationContext(),
+                        DataItemDatabase.class,
+                        "dataitems-db")
                 .fallbackToDestructiveMigration() // Alte Daten werden gelöscht
 
                 .build();
@@ -97,8 +77,8 @@ public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperati
     @Override
     public Boolean updateDataItem(DataItem item) {
         // Update in Room
-           localDao.updateItem(item);
-           // Update in Firestore
+        localDao.updateItem(item);
+        // Update in Firestore
            /*firestore.collection("dataitems")
                    .document(String.valueOf(item.getId()))
                    .set(item);*/
@@ -121,7 +101,51 @@ public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperati
     }
 
     @Override
-    public Boolean syncDataItems(OverviewViewModel viewModel) {
-        return true;
+    public void syncDataItems(OverviewViewModel viewModel) {
+    }
+
+    @Dao
+    public interface SQLiteDataItemCRUDOperations {
+        @Insert
+        long createItem(DataItem item);
+
+        @Update
+        void updateItem(DataItem item);
+
+        @Delete
+        void deleteItem(DataItem item);
+
+        @Query("SELECT * FROM dataitem")
+        List<DataItem> readAllItems();
+
+        @Query("SELECT * FROM dataitem WHERE id=(:id)")
+        DataItem readItem(long id);
+
+    }
+
+    public static final String ARRAY_ELEMENT_SEPARATOR = ";;";
+
+    public static class ArrayListConverters{
+        // when writing to local db: [1,2,3] -> "1;;2;;3"
+        @TypeConverter
+        public static String toString(ArrayList<String> valuesForDB) {
+            if(valuesForDB == null) return "";
+            return valuesForDB.stream().collect(Collectors.joining(ARRAY_ELEMENT_SEPARATOR));
+        }
+
+        //when reading from local db: "1;;2;;3" -> [1,2,3]
+        @TypeConverter
+        public static ArrayList<String> fromString(String valuesFromDB) {
+            if(valuesFromDB == null || valuesFromDB.isEmpty()) return new ArrayList<>();
+            return new ArrayList<>(List.of(valuesFromDB.split(ARRAY_ELEMENT_SEPARATOR)).stream()
+                    .map(value -> value.trim()).collect(Collectors.toList()));
+        }
+    }
+
+    @Database(entities = DataItem.class, version = 11)
+    @TypeConverters({DateConverter.class}) // Converter hinzufügen
+    public abstract static class DataItemDatabase extends RoomDatabase {
+
+        public abstract SQLiteDataItemCRUDOperations getDao();
     }
 }
