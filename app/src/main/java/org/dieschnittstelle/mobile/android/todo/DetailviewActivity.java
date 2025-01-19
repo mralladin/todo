@@ -1,16 +1,23 @@
 package org.dieschnittstelle.mobile.android.todo;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.util.Log;
 
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Spinner;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -33,6 +40,7 @@ import java.util.TimeZone;
 public class DetailviewActivity extends AppCompatActivity {
 
 
+    private static final int REQUEST_CONTACT_PERMISSIONS = 42;
     private ActivityDetailviewBinding binding;
 
     protected static final String LOG_TAG = DetailviewActivity.class.getName();
@@ -90,6 +98,29 @@ public class DetailviewActivity extends AppCompatActivity {
         dateEditText.setOnClickListener(v -> {
             showDatePicker();
         });
+
+        Toolbar toolbar = findViewById(R.id.toolbarDetailView);
+        setSupportActionBar(toolbar);
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_detailview_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        Log.i(LOG_TAG,"item.getItemId() "+ item.getItemId());
+
+        if(item.getItemId() == R.id.addContact){
+            addContact();
+            return true;
+        }else{
+            return super.onOptionsItemSelected(item);
+        }
+
 
     }
 
@@ -153,7 +184,81 @@ public class DetailviewActivity extends AppCompatActivity {
     public void addContact(){
         Intent selectContactIntent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
 
+        selectContactLauncher.launch(selectContactIntent);
 
+    }
+
+    private ActivityResultLauncher<Intent> selectContactLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                Log.i(LOG_TAG,"got reuslt from selectre contact:"+result);
+                if(result.getResultCode() == RESULT_OK){
+                    readContactDetails(result.getData().getData());
+                }
+            }
+
+
+    );
+
+    public void readContactDetails(Uri contactUri){
+        Log.i(LOG_TAG,"readContactDetails contact uri is: "+contactUri);
+
+        Cursor cursor = getContentResolver().query(contactUri,null,null,null,null);
+        if(cursor.moveToFirst()){
+            int displayNameColumnIndex = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
+            String displayName = cursor.getString(displayNameColumnIndex);
+            Log.i(LOG_TAG,"readContactDetails displayName is: "+displayName);
+            int internalContactIDColumnIndex = cursor.getColumnIndex(ContactsContract.Contacts._ID);
+            String internalContactID = cursor.getString(internalContactIDColumnIndex);
+            Log.i(LOG_TAG,"readContactDetails internalContactID is: "+internalContactID);
+            readContactDetailsForInternalID(Long.parseLong(internalContactID));
+            cursor.close();
+        }
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if(requestCode == REQUEST_CONTACT_PERMISSIONS){
+            if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                Log.i(LOG_TAG,"permission granted");
+                readContactDetails(null);
+            }else{
+                Log.i(LOG_TAG,"permission denied");
+            }
+        }else{
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+
+
+    }
+
+    public void readContactDetailsForInternalID(long contactId){
+        Log.i(LOG_TAG,"readContactDetailsForInternalID internalContactID is: "+contactId);
+
+        int hasReadContactPermission = checkSelfPermission(android.Manifest.permission.READ_CONTACTS);
+        if(hasReadContactPermission != PackageManager.PERMISSION_GRANTED){
+
+            requestPermissions(new String[]{android.Manifest.permission.READ_CONTACTS},REQUEST_CONTACT_PERMISSIONS);
+            return;
+        }
+
+
+        String querySelectionPattern = ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?";
+        Cursor cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null
+        ,querySelectionPattern, new String[]{String.valueOf(contactId)},null
+        );
+        while (cursor.moveToNext()){
+            int phoneNumColumnIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+            int phoneNumTypeColumnIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE);
+            String phoneNum = cursor.getString(phoneNumColumnIndex);
+            int phoneNumType = cursor.getInt(phoneNumTypeColumnIndex);
+            Log.i(LOG_TAG,"readContactDetailsForInternalID phoneNum is: "+phoneNum);
+
+            boolean isMobile = phoneNumType == ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE;
+            Log.i(LOG_TAG,"readContactDetailsForInternalID isMobile: "+isMobile);
+        }
+        cursor.close();
     }
 
 

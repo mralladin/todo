@@ -2,7 +2,10 @@ package org.dieschnittstelle.mobile.android.todo;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
@@ -22,13 +25,14 @@ public class LoginActivity extends AppCompatActivity {
     private EditText inputEmail, inputPassword, inputUsername;
     private Button btnRegister, btnLogin;
     private ProgressBar progressBar;
-
+    protected static final String LOG_TAG = LoginActivity.class.getName();
     private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
 
         // Firebase Auth initialisieren
         auth = FirebaseAuth.getInstance();
@@ -42,40 +46,45 @@ public class LoginActivity extends AppCompatActivity {
 
         btnRegister.setOnClickListener(v -> handleRegister());
         btnLogin.setOnClickListener(v -> handleLogin());
+
+        //enable button btnRegister and btnLogin if inputEmail and inputPassword are not empty
+        // Add TextWatcher to enable/disable buttons based on input fields
+        TextWatcher textWatcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // Check if both fields are not empty
+                boolean isEmailNotEmpty = !TextUtils.isEmpty(inputEmail.getText().toString().trim());
+                boolean isPasswordNotEmpty = !TextUtils.isEmpty(inputPassword.getText().toString().trim());
+
+                // Enable or disable the buttons based on field values
+                btnRegister.setEnabled(isEmailNotEmpty && isPasswordNotEmpty);
+                btnLogin.setEnabled(isEmailNotEmpty && isPasswordNotEmpty);
+            }
+        };
+
+        inputEmail.addTextChangedListener(textWatcher);
+        inputPassword.addTextChangedListener(textWatcher);
+
+
     }
 
     private void handleRegister() {
         String email = inputEmail.getText().toString().trim();
         String password = inputPassword.getText().toString().trim();
-        //String username = inputUsername.getText().toString().trim();
+        validateEmailAndPassword( email,  password);
 
-        if (!isValidEmail(email)) {
-            inputEmail.setError("Ungültige E-Mail-Adresse");
-            return;
-        }
 
-        if (!isValidPassword(password)) {
-            inputPassword.setError("Passwort muss genau 6 Zeichen lang sein");
-            return;
-        }
-
-        /*if (TextUtils.isEmpty(username)) {
-            inputUsername.setError("Benutzername darf nicht leer sein");
-            return;
-        }*/
 
         progressBar.setVisibility(View.VISIBLE);
         registerUser(email, password);
-       /* checkUsernameAvailability(username, isAvailable -> {
-            if (isAvailable) {
-                registerUser(email, password);
-                // Benutzer registrieren
-
-            } else {
-                progressBar.setVisibility(View.GONE);
-                inputUsername.setError("Dieser Benutzername ist bereits vergeben");
-            }
-        })*/;
     }
 
     private void registerUser(String email, String password) {
@@ -98,9 +107,12 @@ public class LoginActivity extends AppCompatActivity {
                 });
     }
 
-    private void handleLogin() {
-        String email = inputEmail.getText().toString().trim();
-        String password = inputPassword.getText().toString().trim();
+    private void validateEmailAndPassword(String email, String password){
+        if (!isValidEmail(email)&&!isValidPassword(password)) {
+            inputPassword.setError("Passwort muss genau 6 Zeichen lang sein und nur Ziffern enthalten");
+            inputEmail.setError("Ungültige E-Mail-Adresse");
+            return;
+        }
 
         if (!isValidEmail(email)) {
             inputEmail.setError("Ungültige E-Mail-Adresse");
@@ -111,6 +123,13 @@ public class LoginActivity extends AppCompatActivity {
             inputPassword.setError("Passwort muss genau 6 Zeichen lang sein");
             return;
         }
+    }
+
+
+    private void handleLogin() {
+        String email = inputEmail.getText().toString().trim();
+        String password = inputPassword.getText().toString().trim();
+        validateEmailAndPassword( email,  password);
 
         progressBar.setVisibility(View.VISIBLE);
 
@@ -118,10 +137,9 @@ public class LoginActivity extends AppCompatActivity {
                 .addOnCompleteListener(task -> {
                     progressBar.setVisibility(View.GONE);
                     if (task.isSuccessful()) {
-                        // Anmeldung erfolgreich
                         Toast.makeText(LoginActivity.this, "Anmeldung erfolgreich!", Toast.LENGTH_SHORT).show();
 
-                        // Weiterleitung zur nächsten Activity
+                        //zur nächsten Activity
                         Intent intent = new Intent(LoginActivity.this, OverviewActivity.class);
                         FirebaseUser user = auth.getCurrentUser();
                         intent.putExtra("username", user != null ? user.getDisplayName() : "Unbekannt");
@@ -148,7 +166,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private boolean isValidPassword(String password) {
-        return password.length() == 6;
+        Log.i(LOG_TAG,"PaAsswordCheck"+ (password.length() == 6&&password.matches("[0-9]+")));
+        return password.length() == 6&&password.matches("[0-9]+");
     }
 
     interface UsernameCallback {

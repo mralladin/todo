@@ -10,6 +10,24 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/custombarDetailView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbarDetailView"
+            app:title="@string/AppName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimary"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+        </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/textFieldName"
         android:layout_width="match_parent"
@@ -40,7 +58,7 @@
     </com.google.android.material.checkbox.MaterialCheckBox>
 
 
-    <!--            android:text="@={viewmodel.item.description}"-->
+    <!-- android:text="@={viewmodel.item.firebaseId}"-->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/itemDescription"
         android:layout_width="match_parent"
@@ -53,7 +71,8 @@
             android:gravity="start"
             android:lines="15"
             android:minLines="15"
-            android:text="@={viewmodel.item.firebaseId}"
+            android:text="@={viewmodel.item.description}"
+
             android:layout_height="wrap_content"
             />
     </com.google.android.material.textfield.TextInputLayout>

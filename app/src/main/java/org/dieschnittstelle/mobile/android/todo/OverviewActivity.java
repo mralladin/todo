@@ -80,8 +80,6 @@ public class OverviewActivity extends AppCompatActivity {
     private IDataItemCRUDOperations crudOperations;
     private ProgressBar progressBar;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,18 +95,14 @@ public class OverviewActivity extends AppCompatActivity {
             viewmodel = new ViewModelProvider(this).get(OverviewViewModel.class);
             progressBar = findViewById(R.id.progressbar);
             viewmodel.getProcessingState().observe(this, processingState -> {
-                    Log.i("TestLog2", "observe processing state: " + processingState);
                     if (processingState == OverviewViewModel.ProcessingState.RUNNING_LONG) {
                         progressBar.setVisibility(View.VISIBLE);
                     } else if (processingState == OverviewViewModel.ProcessingState.DONE) {
-                        Log.i("TestLog2", "observe processing state done: " + "wann");
-                        Log.i("TestLog2", "progress"+progressBar.getVisibility());
                         progressBar.setVisibility(View.GONE);
-
-                        viewmodel.sortItems("");
                         if(listviewAdapter!=null)
                             listviewAdapter.notifyDataSetChanged();
                     }
+
 
                 });
             viewmodel.setCrudOperations(crudOperations);
@@ -133,7 +127,7 @@ public class OverviewActivity extends AppCompatActivity {
             });
 
             if (getSupportActionBar() != null) {
-                getSupportActionBar().setTitle("ToDo's");
+                getSupportActionBar().setTitle(R.string.AppName);
             }
             if (getSupportActionBar() == null) {
                 Log.e("ToolbarError", "SupportActionBar konnte nicht initialisiert werden");
@@ -157,7 +151,7 @@ public class OverviewActivity extends AppCompatActivity {
                 @NonNull
                 @Override
                 public View getView(int position, @Nullable View recyclableListItemView, @NonNull ViewGroup parent) {
-                    Log.i(LOG_TAG, "getView() for position: " + position);
+
                     ActivityOverviewStructuredListitemViewBinding binding;
                     View listItemView = null;
                     DataItem listItem = getItem(position);
@@ -503,23 +497,17 @@ public class OverviewActivity extends AppCompatActivity {
 
     private long calculateRemainingTime(DataItem item) {
         long currentTime = System.currentTimeMillis();
-        Log.i("timerlog", "Time: " + item.getTbdDate());
         long endTime = 0;
         if (item.getTbdDate() != null) {
             endTime = item.getTbdDate();
         }
-        Log.i("timerlog", "endtime: " + endTime);
-        Log.i("timerlog", "current Time: " + currentTime);
         long remainingTime = Math.max(0, endTime - currentTime);
-        Log.i("timerlog", "Remaining Time: " + remainingTime);
         return remainingTime;
     }
 
 
 
     private long calculateTotalTime(DataItem item) {
-        Log.i("TimerLog", "Starttime: " + item.getStartTime());
-        Log.i("TimerLog", "TBDtime: " + item.getTbdDate());
         if (item.getStartTime() == null || item.getTbdDate() == null) {
 
             Calendar calendar = Calendar.getInstance();
