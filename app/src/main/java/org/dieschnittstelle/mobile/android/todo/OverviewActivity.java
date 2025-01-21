@@ -98,6 +98,7 @@ public class OverviewActivity extends AppCompatActivity {
             if (!viewmodel.isInitialised()) {
                 Log.i(LOG_TAG, "load data to be shown in list view...");
                 viewmodel.readAllDataItems();
+
                 viewmodel.setInitialised(true);
             }
 
@@ -437,10 +438,10 @@ public class OverviewActivity extends AppCompatActivity {
                 ).start();
                 return true;
             case R.id.sortItems:
-                this.viewmodel.sortItems("name");
+                this.viewmodel.sortItems(viewmodel.FILTER_VALUE_DATE);
                 return true;
             case R.id.sortItemsToPrio:
-                this.viewmodel.sortItems("priority");
+                this.viewmodel.sortItems(viewmodel.FILTER_VALUE_PRIORITY);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

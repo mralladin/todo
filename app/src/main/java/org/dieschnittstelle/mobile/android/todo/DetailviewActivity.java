@@ -349,8 +349,9 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        Log.i(LOG_TAG, "requestCode is:"+requestCode);
         if (requestCode == REQUEST_CONTACT_PERMISSIONS) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if ( grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.i(LOG_TAG, "permission granted");
             } else {
                 Log.i(LOG_TAG, "permission denied");
