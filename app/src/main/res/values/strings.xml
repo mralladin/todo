@@ -10,6 +10,8 @@
     <string name="priorityText">Priority</string>
     <string name="priorityPrompt">Set your Priority</string>
     <string name="select_priority_text">Select Priority</string>
+    <string name="PasswordInvalid">Passwort muss genau 6 Zeichen lang sein und nur Ziffern enthalten</string>
+    <string name="invalidMail">Ungültige E-Mail-Adresse</string>
 
     <string-array name="priority_values">
         <item>Niedrig</item>

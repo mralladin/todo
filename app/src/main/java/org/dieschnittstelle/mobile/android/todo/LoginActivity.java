@@ -118,18 +118,18 @@ public class LoginActivity extends AppCompatActivity {
     //Validierung der Eingabe
     private Boolean validateEmailAndPassword(String email, String password) {
         if (!isValidEmail(email) && !isValidPassword(password)) {
-            inputPassword.setError("Passwort muss genau 6 Zeichen lang sein und nur Ziffern enthalten");
-            inputEmail.setError("Ungültige E-Mail-Adresse");
+            inputPassword.setError(getString(R.string.PasswordInvalid));
+            inputEmail.setError(getString(R.string.invalidMail));
             return false;
         }
 
         if (!isValidEmail(email)) {
-            inputEmail.setError("Ungültige E-Mail-Adresse");
+            inputEmail.setError(getString(R.string.invalidMail));
             return false;
         }
 
         if (!isValidPassword(password)) {
-            inputPassword.setError("Passwort muss genau 6 Zeichen lang sein");
+            inputPassword.setError(getString(R.string.PasswordInvalid));
             return false;
         }
         return true;
