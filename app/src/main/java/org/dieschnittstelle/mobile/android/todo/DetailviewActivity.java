@@ -244,7 +244,7 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
     }
 
     private void sendSMS(String phonenr) {
-        Uri receiverUri= Uri.parse("smsto:"+"123456789");
+        Uri receiverUri= Uri.parse("smsto:"+phonenr);
         Intent sendSMSIntent=new Intent(Intent.ACTION_SENDTO,receiverUri);
         sendSMSIntent.putExtra("sms_body","Neues ToDo für dich:"+ this.viewModel.getItem().getName()+" \nBeschreibung: "+this.viewModel.getItem().getDescription()+"");
         startActivity(sendSMSIntent);
@@ -281,8 +281,7 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
 
     public void showDatePicker() {
         Log.i(LOG_TAG, "oncreate called");
-        Intent intent = new Intent(DetailviewActivity.this,
-                DatePickerActivity.class);
+        Intent intent = new Intent(DetailviewActivity.this, DatePickerActivity.class);
         startForResult.launch(intent);
 
     }
@@ -321,10 +320,11 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
     }
 
     public void addContact() {
+        if (checkSelfPermission(android.Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{android.Manifest.permission.READ_CONTACTS}, REQUEST_CONTACT_PERMISSIONS);
+        }
         Intent selectContactIntent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
-
         selectContactLauncher.launch(selectContactIntent);
-
     }
 
     public void readContactDetails(Uri contactUri) {
@@ -395,6 +395,7 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
             Log.i(LOG_TAG, "readContactDetailsForInternalID phoneNum is: " + phoneNum);
             phoneNumbers.add(phoneNum);
             boolean isMobile = phoneNumType == ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE;
+
             Log.i(LOG_TAG, "readContactDetailsForInternalID isMobile: " + isMobile);
         }
         cursor.close();
@@ -467,6 +468,7 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
         Log.i(LOG_TAG, "Deleted contact: " + contact + " at position: " + position);
     }
 
+    //Versende Emails
     @Override
     public void onSendMailClick(int position, String contact) {
         String contactid= viewModel.getItem().getContactIds().get(position);
@@ -480,6 +482,7 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
 
     }
 
+    //Versende SMS
     @Override
     public void onSendSMSClick(int position, String contact) {
         String contactid= viewModel.getItem().getContactIds().get(position);
