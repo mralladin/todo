@@ -13,6 +13,7 @@ import org.dieschnittstelle.mobile.android.skeleton.R;
 
 import java.util.List;
 
+//Dadurch werden die Button Clicks und einzelnen Listen einträge für Kontakte umgesetzt
 public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ContactViewHolder>{
 
     private List<String> contactList;

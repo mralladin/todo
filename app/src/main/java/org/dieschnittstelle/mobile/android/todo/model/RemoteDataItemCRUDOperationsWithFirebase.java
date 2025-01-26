@@ -14,6 +14,7 @@ import java.util.concurrent.CompletableFuture;
 public class RemoteDataItemCRUDOperationsWithFirebase implements IDataItemCRUDOperations {
 
     private final CollectionReference todosCollection;
+    private static final String LOG_TAG = RemoteDataItemCRUDOperationsWithFirebase.class.getSimpleName();
 
     public RemoteDataItemCRUDOperationsWithFirebase() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -84,7 +85,7 @@ public class RemoteDataItemCRUDOperationsWithFirebase implements IDataItemCRUDOp
     @Override
     public Boolean deleteDataItem(DataItem item) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
-        Log.i("TestLog", "FirebaseId: " + item.getFirebaseId());
+        Log.i(LOG_TAG, "FirebaseId: " + item.getFirebaseId());
         todosCollection.document(item.getFirebaseId()).delete()
                 .addOnSuccessListener(unused -> future.complete(true))
                 .addOnFailureListener(e -> future.complete(false));

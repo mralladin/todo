@@ -19,7 +19,7 @@ import retrofit2.http.PUT;
 import retrofit2.http.Path;
 
 public class RemoteDataItemCRUDOperationsWithRetrofit implements IDataItemCRUDOperations {
-
+    private static final String LOG_TAG = RemoteDataItemCRUDOperationsWithRetrofit.class.getName();
     private final TodoRESTWebAPI todoRESTWebAPI;
 
     public RemoteDataItemCRUDOperationsWithRetrofit() {
@@ -38,7 +38,7 @@ public class RemoteDataItemCRUDOperationsWithRetrofit implements IDataItemCRUDOp
                 System.out.println(response.body()); // Debug-Ausgabe
                 createdItem = todoRESTWebAPI.createItem(item).execute().body();
             } else {
-                Log.e("Response", "Log:" + response.errorBody().string());
+                Log.e(LOG_TAG, "Log:" + response.errorBody().string());
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -77,9 +77,9 @@ public class RemoteDataItemCRUDOperationsWithRetrofit implements IDataItemCRUDOp
     @Override
     public Boolean deleteDataItem(DataItem item) {
         try {
-            Log.i("TestLog1", "dknallt da?");
+            Log.i(LOG_TAG, "dknallt da?");
             Boolean d = todoRESTWebAPI.deleteItem(item.getId()).execute().body();
-            Log.i("TestLog1", "d:" + d);
+            Log.i(LOG_TAG, "d:" + d);
             return d;
         } catch (IOException e) {
             throw new RuntimeException(e);

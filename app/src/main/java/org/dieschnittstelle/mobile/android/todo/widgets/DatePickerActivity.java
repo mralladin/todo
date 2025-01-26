@@ -18,9 +18,9 @@ import java.util.Date;
 import java.util.Locale;
 
 public class DatePickerActivity extends Activity {
-    /**
-     * Called when the activity is first created.
-     */
+    private static final String LOG_TAG = DatePickerActivity.class.getSimpleName();
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,11 +31,11 @@ public class DatePickerActivity extends Activity {
         TimePicker timepicker = findViewById(R.id.timepicker);
         timepicker.setIs24HourView(true);
         Calendar calendar = Calendar.getInstance();
-        Log.i("Debuger", "calendar in date picker " + calendar.getTime());
+        Log.i(LOG_TAG, "calendar in date picker " + calendar.getTime());
         int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
         calendar.add(Calendar.MINUTE, 4);
         int currentMinute = calendar.get(Calendar.MINUTE);
-        Log.i("DateLogg,", "hour" + currentHour);
+        Log.i(LOG_TAG, "hour" + currentHour);
         timepicker.setHour(currentHour);
         timepicker.setMinute(currentMinute);
 
@@ -47,9 +47,6 @@ public class DatePickerActivity extends Activity {
 
 
         saveDateButton.setOnClickListener(v -> {
-            //Log.i("DateLogg,",dateAsText.getText().toString());
-            //Log.i("DateLogg,","hour "+timepicker.getHour());
-            //Log.i("DateLogg,","min "+
             // Datum und Uhrzeit aus den Pickern lesen
             int year = picker.getYear();
             int month = picker.getMonth(); // Monate starten bei 0
@@ -72,32 +69,6 @@ public class DatePickerActivity extends Activity {
 
         });
 
-
-
-        /*picker.init(picker.getYear(),picker.getMonth(),picker.getDayOfMonth(), new DatePicker.OnDateChangedListener() {
-
-            @Override
-            public void onDateChanged(DatePicker view, int year, int monthOfYear,
-                                      int dayOfMonth) {
-                // initialisiere das Datum, beruecksichtige die Unterschiede bei den Konventionen fuer die Repraesentation von Jahr / Monat / Tag als Integer-Werte
-                Date dt = new Date(year-1900,monthOfYear,dayOfMonth);
-                // setze das Datum auf dem Textfeld
-                dateAsText.setText(dt.toString());
-
-                // ueberpruefe das Datum
-                if (year < 2024) {
-                    startActivity(new Intent(DatePickerActivity.this, OverviewActivity.class));
-                }
-                Log.i("CustomLog,",dateAsText.getText().toString());
-                // Daten in einen Intent packen
-                Intent resultIntent = new Intent();
-                resultIntent.putExtra("result_key", "Hier sind die Daten von der zweiten Aktivität");
-
-                // Setze das Ergebnis und beende die Aktivität
-                setResult(RESULT_OK, resultIntent);
-                finish();
-            }
-        });*/
 
     }
 }

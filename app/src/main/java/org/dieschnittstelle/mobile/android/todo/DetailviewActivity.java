@@ -70,7 +70,7 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
                     Intent data = result.getData();
                     if (data != null) {
                         String returnedData = data.getStringExtra("result_key");
-                        Log.e("TestLog", returnedData);
+                        Log.e(LOG_TAG, returnedData);
                         dateEditText.setText(returnedData);
                         parseDateString(returnedData);
                     }
@@ -131,7 +131,7 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
         this.viewModel.getValidOnSave().observe(this, validOnSave -> {
             if (validOnSave) {
                 saveItem();
-                Log.i("save", "save");
+                Log.i(LOG_TAG, "save");
             }
         });
 
@@ -140,7 +140,7 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
         if (requestCode == REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_CREATE) {
             // Handle the specific case
             deleteButtonDetailView.setVisibility(View.GONE);
-            Log.i("DetailviewActivity", "Started with REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_CREATE");
+            Log.i(LOG_TAG, "Started with REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_CREATE");
         }
 
         initRecyclerView();
@@ -199,7 +199,7 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
         priorityDropdown.setOnItemClickListener((parent, view, position, id) -> {
             String selectedPriority = parent.getItemAtPosition(position).toString();
             viewModel.getItem().setPrio(position);
-            Log.i("Selected Priority", selectedPriority);
+            Log.i(LOG_TAG, selectedPriority);
         });
 
         priorityDropdown.setText(item.getPrio() == 0 ? "Niedrig" : item.getPrio() == 1 ? "Mittel" : item.getPrio() == 2 ? "Hoch" : "Sehr hoch", false);
@@ -261,7 +261,7 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
         try {
             startActivity(Intent.createChooser(sendMailIntent, "Wähle eine E-Mail-App aus"));
         } catch (android.content.ActivityNotFoundException ex) {
-            Log.e("sendMail", "Keine E-Mail-App gefunden.");
+            Log.e(LOG_TAG, "Keine E-Mail-App gefunden.");
             // Zeige eine Benachrichtigung oder Dialog an
         }
     }
@@ -289,12 +289,12 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
 
     private void parseDateString(String dateString) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
-        Log.e("datestrin in parse ", dateString);
+        Log.e(LOG_TAG, dateString);
 
         try {
             // String in Date konvertieren
             tbdDate = dateFormat.parse(dateString);
-            Log.e("TestLog5", "I reach this");
+            Log.e(LOG_TAG, "I reach this");
 
             // Date in Millisekunden umwandeln
             tbdTimestamp = tbdDate.getTime();
@@ -310,11 +310,11 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
         Calendar calendar = Calendar.getInstance();
         if (timestamp == null) {
             timestamp = calendar.getTime().getTime();
-            Log.i("Debuger", "calendar " + calendar.getTime());
+            Log.i(LOG_TAG, "calendar " + calendar.getTime());
         }
         // Timestamp in Date umwandeln
         Date date = new Date(timestamp);
-        Log.i("Debuger", "date " + date);
+        Log.i(LOG_TAG, "date " + date);
 
         // Date in das gewünschte String-Format umwandeln
         return dateFormat.format(date);
@@ -382,11 +382,11 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
     public ArrayList<String> getPhoneNrs(long contactId) {
         ArrayList<String> phoneNumbers = new ArrayList<>();
 
-        String querySelectionPattern =querySelectionPattern = ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?";
+        String querySelectionPattern = ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?";
         Cursor cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null
                 , querySelectionPattern, new String[]{String.valueOf(contactId)}, null
         );
-        //Telefonnummer
+        //Handynnummer
         while (cursor.moveToNext()) {
             int phoneNumColumnIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
             int phoneNumTypeColumnIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE);
@@ -464,7 +464,7 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
         contactList.remove(position); // Element aus der Liste entfernen
         viewModel.getItem().getContactIds().remove(position);
         adapter.notifyItemRemoved(position); // RecyclerView aktualisieren
-        Log.i("ContactAdapter", "Deleted contact: " + contact + " at position: " + position);
+        Log.i(LOG_TAG, "Deleted contact: " + contact + " at position: " + position);
     }
 
     @Override
@@ -476,7 +476,7 @@ public class DetailviewActivity extends AppCompatActivity implements ContactAdap
                 sendMail(mail);
             }
         }
-        Log.i("ContactAdapter", "ContactId: " +contactid);
+        Log.i(LOG_TAG, "ContactId: " +contactid);
 
     }
 

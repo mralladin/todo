@@ -62,9 +62,7 @@ public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperati
     public List<DataItem> readAllDataItems() {
         // Zuerst lokale Daten laden
         List<DataItem> localItems = localDao.readAllItems();
-        /*localItems.forEach(dataItem ->
-                        Log.i(LOG_TAG,"Get DataItem: "+dataItem.getId()+" DataItem Name:"+dataItem.getName())
-                );*/
+
         return localItems;
     }
 

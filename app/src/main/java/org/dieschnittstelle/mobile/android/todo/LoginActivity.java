@@ -47,8 +47,7 @@ public class LoginActivity extends AppCompatActivity {
         btnRegister.setOnClickListener(v -> handleRegister());
         btnLogin.setOnClickListener(v -> handleLogin());
 
-        //enable button btnRegister and btnLogin if inputEmail and inputPassword are not empty
-        // Add TextWatcher to enable/disable buttons based on input fields
+        //TextWatcher überpfüft ob Eingabefelder nicht leer sind und aktiviert/deaktiviert die Buttons
         TextWatcher textWatcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -86,6 +85,7 @@ public class LoginActivity extends AppCompatActivity {
         registerUser(email, password);
     }
 
+    // Registrierung des Benutzers
     private void registerUser(String email, String password) {
         auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
@@ -106,6 +106,7 @@ public class LoginActivity extends AppCompatActivity {
                 });
     }
 
+    //Validierung der Eingabe
     private void validateEmailAndPassword(String email, String password) {
         if (!isValidEmail(email) && !isValidPassword(password)) {
             inputPassword.setError("Passwort muss genau 6 Zeichen lang sein und nur Ziffern enthalten");
@@ -123,7 +124,7 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-
+    //handled den Login
     private void handleLogin() {
         String email = inputEmail.getText().toString().trim();
         String password = inputPassword.getText().toString().trim();
@@ -150,6 +151,7 @@ public class LoginActivity extends AppCompatActivity {
                 });
     }
 
+    //Prüft ob der Benutzername verfügbar ist wurde aber nicht umgesetzt
     private void checkUsernameAvailability(String username, UsernameCallback callback) {
         // Simulierte Überprüfung des Benutzernamens (Firebase Firestore könnte hier integriert werden)
         callback.onResult(!"testuser".equalsIgnoreCase(username));

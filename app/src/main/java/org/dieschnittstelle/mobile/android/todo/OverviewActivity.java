@@ -61,19 +61,21 @@ public class OverviewActivity extends AppCompatActivity {
     private SwipeRefreshLayout swipeRefreshLayout;
     private final boolean isOnline = false;
     private OverviewViewModel viewmodel;
+    //War buggy und wird aktuell nicht mehr genutzt
     private final HashMap<String, CountDownTimer> activeTimers = new HashMap<>();
     private AuthManager authManager;
     private ImageButton logoutButton;
     private IDataItemCRUDOperations crudOperations;
     private ProgressBar progressBar;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         authManager = new AuthManager();
         setContentView(R.layout.activity_overview);
+        //RefreshLayout sollte ursprünglich zur Synchronisierung genutzt werden
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
-        //monitorConnectionStatus();
 
         //crudOperations=new LocalDataItemCRUDOperationsWithRoom(this);
         try {
@@ -93,6 +95,7 @@ public class OverviewActivity extends AppCompatActivity {
 
             });
             viewmodel.setCrudOperations(crudOperations);
+            
             setOnlineStatus();
 
             if (!viewmodel.isInitialised()) {
@@ -118,7 +121,7 @@ public class OverviewActivity extends AppCompatActivity {
                 getSupportActionBar().setTitle(R.string.AppName);
             }
             if (getSupportActionBar() == null) {
-                Log.e("ToolbarError", "SupportActionBar konnte nicht initialisiert werden");
+                Log.e(LOG_TAG, "SupportActionBar konnte nicht initialisiert werden");
             }
 
 
@@ -218,6 +221,7 @@ public class OverviewActivity extends AppCompatActivity {
 
     }
 
+    //Online Status prüfen kann auch durch synchronise upgedated werden
     private void setOnlineStatus() {
         // Holen des ImageView-Elements
         ImageView connectionStatusImageView = findViewById(R.id.connection_status);
@@ -257,7 +261,7 @@ public class OverviewActivity extends AppCompatActivity {
         }).start();
 
     }
-
+    //Popup Menü um die Prio zu ändern (Anforderung)  oder Items zu löschen
     private void showPopupMenu(View anchorView, int position) {
         PopupMenu popupMenu = new PopupMenu(this, anchorView);
         popupMenu.getMenuInflater().inflate(R.menu.context_menu, popupMenu.getMenu());
@@ -282,11 +286,12 @@ public class OverviewActivity extends AppCompatActivity {
         // Menü anzeigen
         popupMenu.show();
     }
-
+    
+    //Alert Dialo um Prio auszuwählen und zu änden
     private void changePriority(int position) {
         // Optionen für die Priorität
         String[] priorities = {"Niedrig", "Mittel", "Hoch", "Sehr hoch"};
-        int[] selectedPriority = {0}; // Standardauswahl (Niedrig)
+        int[] selectedPriority = {0}; // Standardauswahl (Niedrigrn
         DataItem listItem = viewmodel.getDataItems().get(position);
         AtomicInteger currentPriority = new AtomicInteger(listItem.getPrio());
         // Dialog erstellen
@@ -334,6 +339,7 @@ public class OverviewActivity extends AppCompatActivity {
                 .show();
     }
 
+    //Deaktiviert Elemente welche abgelaufen sind
     private void setTimersAndTextForEachListItem(
             int position,
             ConstraintLayout listItemContainer,
@@ -349,7 +355,7 @@ public class OverviewActivity extends AppCompatActivity {
         if (remainingTime <= 0) {
             //show listItem.getTbdDate() to DDMMYYYY HH:MM
 
-            Log.i("IsDisable", listItem.getName() + " " + listItem.getTbdDate());
+            Log.i(LOG_TAG, listItem.getName() + " " + listItem.getTbdDate());
             disableProgressBar(listItem, checkBox);
         } else {
             enableProgressBar(listItem, checkBox);
@@ -475,8 +481,8 @@ public class OverviewActivity extends AppCompatActivity {
 
         if (requestCode == REQUEST_CODE_FOR_CALL_DETAIL_VIEW_FOR_EDIT) {
             if (resultCode == OverviewActivity.RESULT_OK) {
-                Log.i("TestLog", "Results ok from detail view");
-                Log.i("TestLog", ARG_ITEM);
+                Log.i(LOG_TAG, "Results ok from detail view");
+                Log.i(LOG_TAG, ARG_ITEM);
 
                 DataItem itemFromDetailViewToBeModifiedInList = (DataItem) data.getSerializableExtra(ARG_ITEM);
 

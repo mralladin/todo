@@ -24,7 +24,7 @@ public class SyncDataItemCRUDOperations implements IDataItemCRUDOperations {
             createdItem = remoteCrud.createDataItem(createdItem);
             localCrud.updateDataItem(createdItem);
         } catch (Exception e) {
-            Log.e("TestLog", "Error creating item", e);
+            Log.e(LOG_TAG, "Error creating item", e);
         }
         return createdItem;
     }
@@ -68,12 +68,13 @@ public class SyncDataItemCRUDOperations implements IDataItemCRUDOperations {
             //Füge jedes Local Item nach dem Remote hinzu
             for (DataItem localItem : localItems) {
                 DataItem remoteItem = remoteCrud.createDataItem(localItem);
+                //Firebase ID setzten
                 localCrud.readDataItem(localItem.getId()).setFirebaseId(remoteItem.getFirebaseId());
                 //Log localItem FirebaseId
-                Log.i("TestLog", "LocalItem FirebaseId: " + localItem.getFirebaseId());
+                Log.i(LOG_TAG, "LocalItem FirebaseId: " + localItem.getFirebaseId());
             }
             for (DataItem remoteItem : remoteCrud.readAllDataItems()) {
-                Log.i("TestLog", "RemoteItem FirebaseId: " + remoteItem.getFirebaseId());
+                Log.i(LOG_TAG, "RemoteItem FirebaseId: " + remoteItem.getFirebaseId());
             }
         }
         //Es gibt keine Lokalen Todo's

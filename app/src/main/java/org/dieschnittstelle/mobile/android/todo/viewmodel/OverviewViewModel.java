@@ -198,9 +198,9 @@ public class OverviewViewModel extends ViewModel {
                     localOperationsparam.deleteDataItem(todo);
                     getDataItems().remove(todo);
                 }
-                Log.i("TODO_APP", "Alle lokalen Todos gelöscht.");
+                Log.i(LOG_TAG, "Alle lokalen Todos gelöscht.");
             } catch (Exception e) {
-                Log.e("TODO_APP", "Fehler beim Löschen lokaler Todos: " + e.getMessage(), e);
+                Log.e(LOG_TAG, "Fehler beim Löschen lokaler Todos: " + e.getMessage(), e);
             }
             processingState.postValue(ProcessingState.DONE);
         }).start();
@@ -215,9 +215,9 @@ public class OverviewViewModel extends ViewModel {
                     remoteOperationsparam.deleteDataItem(todo);
                 }
 
-                Log.i("TODO_APP", "Alle Remote-Todos gelöscht.");
+                Log.i(LOG_TAG, "Alle Remote-Todos gelöscht.");
             } catch (Exception e) {
-                Log.e("TODO_APP", "Fehler beim Löschen von Remote-Todos: " + e.getMessage(), e);
+                Log.i(LOG_TAG, "Fehler beim Löschen von Remote-Todos: " + e.getMessage(), e);
             }
             processingState.postValue(ProcessingState.DONE);
 
@@ -228,7 +228,7 @@ public class OverviewViewModel extends ViewModel {
         processingState.setValue(ProcessingState.RUNNING_LONG);
         executorService.execute(() -> {
             boolean updated = this.crudOperations.updateDataItem(itemFromDetailViewToBeModifiedInList);
-            Log.e("TestLog5", "updated: " + updated);
+            Log.e(LOG_TAG, "updated: " + updated);
             if (updated) {
                 //showMessage(getString(R.string.on_result_from_detailview_msg) + itemFromDetailViewToBeModifiedInList.getName());
                 int itemPosition = getDataItems().indexOf(itemFromDetailViewToBeModifiedInList);
