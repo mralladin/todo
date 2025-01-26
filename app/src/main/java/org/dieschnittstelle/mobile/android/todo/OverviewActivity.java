@@ -101,7 +101,6 @@ public class OverviewActivity extends AppCompatActivity {
             if (!viewmodel.isInitialised()) {
                 Log.i(LOG_TAG, "load data to be shown in list view...");
                 viewmodel.readAllDataItems();
-
                 viewmodel.setInitialised(true);
             }
 
@@ -117,12 +116,6 @@ public class OverviewActivity extends AppCompatActivity {
                 swipeRefreshLayout.setRefreshing(false);
             });
 
-            if (getSupportActionBar() != null) {
-                getSupportActionBar().setTitle(R.string.AppName);
-            }
-            if (getSupportActionBar() == null) {
-                Log.e(LOG_TAG, "SupportActionBar konnte nicht initialisiert werden");
-            }
 
 
             logoutButton.setOnClickListener(a -> {
@@ -213,7 +206,7 @@ public class OverviewActivity extends AppCompatActivity {
 
             });
 
-            viewmodel.sortItems("");
+            viewmodel.sortItems("initialSort");
 
         } catch (Exception e) {
             e.printStackTrace();

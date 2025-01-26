@@ -25,12 +25,12 @@
     android:id="@+id/itemChecked"
     />
 <TextView
-    android:text="@={item.name}"
     android:id="@+id/itemNameInOverview"
-    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:textSize="18sp"
-    android:padding="10dp"
+    app:formattedText="@{item.name}"
+    android:textSize="14sp"
+    android:layout_width="0dp"
+    android:padding="7dp"
     app:layout_constraintLeft_toRightOf="@id/itemChecked"
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintTop_toTopOf="parent"

@@ -162,8 +162,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private boolean isValidPassword(String password) {
-        Log.i(LOG_TAG, "PaAsswordCheck" + (password.length() == 6 && password.matches("[0-9]+")));
-        return password.length() == 6 && password.matches("[0-9]+");
+        Log.i(LOG_TAG, "PaAsswordCheck" + (password.length() == 6 && password.matches("\\\\d{6}")));
+        return password.length() == 6 && password.matches("\\\\d{6}");
     }
 
     interface UsernameCallback {

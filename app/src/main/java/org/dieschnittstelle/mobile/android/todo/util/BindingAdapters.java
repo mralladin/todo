@@ -20,4 +20,15 @@ public class BindingAdapters {
             textView.setText(""); // Leeren Text setzen, falls timestamp null ist
         }
     }
+
+    @BindingAdapter("formattedText")
+    public static void setFormattedText(TextView textView, String text) {
+        if (text != null) {
+            // Wenn der Text länger als 16 Zeichen ist, kürze ihn mit "..."
+            if (text.length() > 21) {
+                text = text.substring(0, 21) + "...";
+            }
+            textView.setText(text);
+        }
+    }
 }

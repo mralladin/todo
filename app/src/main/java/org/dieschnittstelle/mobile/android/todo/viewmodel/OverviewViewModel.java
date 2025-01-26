@@ -165,14 +165,18 @@ public class OverviewViewModel extends ViewModel {
             }
         }
 
-        processingState.setValue(ProcessingState.RUNNING);
-        getDataItems().sort(this.currentSorter);
-        processingState.postValue(ProcessingState.DONE);
+        if(method.equals("initialSort")){
+            getDataItems().sort(this.currentSorter);
+        }else{
+            processingState.setValue(ProcessingState.RUNNING);
+            getDataItems().sort(this.currentSorter);
+            processingState.postValue(ProcessingState.DONE);
+        }
+
     }
 
     public void readAllDataItems() {
         processingState.setValue(ProcessingState.RUNNING_LONG);
-
         new Thread(() -> {
             this.crudOperations.syncDataItems(this);
             try {

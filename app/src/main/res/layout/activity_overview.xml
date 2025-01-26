@@ -18,6 +18,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
+            app:title="@string/AppName"
+            app:titleTextAppearance="@style/ToolbarTitleTextAppearance"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
             <ImageView
                 android:id="@+id/connection_status"
@@ -46,16 +48,6 @@
                 android:paddingEnd="10dp"
                 android:src="@drawable/baseline_logout_24" />
 
-            <ImageButton
-                android:id="@+id/friends"
-                android:layout_width="wrap_content"
-                android:layout_height="35dp"
-                android:layout_gravity="end"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:focusable="false"
-                android:paddingEnd="10dp"
-                android:src="@drawable/baseline_people_24" />
-
 
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
@@ -80,7 +72,6 @@
         android:visibility="visible"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-
         />
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:layout_width="wrap_content"
