@@ -78,17 +78,26 @@ public class LoginActivity extends AppCompatActivity {
     private void handleRegister() {
         String email = inputEmail.getText().toString().trim();
         String password = inputPassword.getText().toString().trim();
-        validateEmailAndPassword(email, password);
 
+        if(validateEmailAndPassword(email, password)){
 
-        progressBar.setVisibility(View.VISIBLE);
-        registerUser(email, password);
+            progressBar.setVisibility(View.VISIBLE);
+
+            registerUser(email, password);
+        }
+
     }
 
     // Registrierung des Benutzers
     private void registerUser(String email, String password) {
         auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
+                    try {
+                        Thread.sleep(4000);
+
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     progressBar.setVisibility(View.GONE);
                     if (task.isSuccessful()) {
                         // Benutzer erfolgreich registriert
@@ -107,21 +116,23 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     //Validierung der Eingabe
-    private void validateEmailAndPassword(String email, String password) {
+    private Boolean validateEmailAndPassword(String email, String password) {
         if (!isValidEmail(email) && !isValidPassword(password)) {
             inputPassword.setError("Passwort muss genau 6 Zeichen lang sein und nur Ziffern enthalten");
             inputEmail.setError("Ungültige E-Mail-Adresse");
-            return;
+            return false;
         }
 
         if (!isValidEmail(email)) {
             inputEmail.setError("Ungültige E-Mail-Adresse");
-            return;
+            return false;
         }
 
         if (!isValidPassword(password)) {
             inputPassword.setError("Passwort muss genau 6 Zeichen lang sein");
+            return false;
         }
+        return true;
     }
 
     //handled den Login
@@ -134,6 +145,12 @@ public class LoginActivity extends AppCompatActivity {
 
         auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
+                    try {
+                        Thread.sleep(4000);
+
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     progressBar.setVisibility(View.GONE);
                     if (task.isSuccessful()) {
                         Toast.makeText(LoginActivity.this, "Anmeldung erfolgreich!", Toast.LENGTH_SHORT).show();
@@ -162,8 +179,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private boolean isValidPassword(String password) {
-        Log.i(LOG_TAG, "PaAsswordCheck" + (password.length() == 6 && password.matches("\\\\d{6}")));
-        return password.length() == 6 && password.matches("\\\\d{6}");
+        Log.i(LOG_TAG, "PaAsswordCheck" + (password.length() == 6 && password.matches("\\d{6}")));
+        return password.length() == 6 && password.matches("\\d{6}");
     }
 
     interface UsernameCallback {
