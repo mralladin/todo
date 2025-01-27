@@ -178,7 +178,7 @@ public class OverviewViewModel extends ViewModel {
     public void readAllDataItems() {
         processingState.setValue(ProcessingState.RUNNING_LONG);
         new Thread(() -> {
-            this.crudOperations.syncDataItems(this);
+            this.crudOperations.syncDataItems(this,true);
             try {
                 Thread.sleep(4000);
             } catch (InterruptedException e) {
@@ -188,6 +188,8 @@ public class OverviewViewModel extends ViewModel {
                 List<DataItem> items = this.crudOperations.readAllDataItems();
                 getDataItems().addAll(items);
                 getDataItems().sort(this.currentSorter);
+                Log.i(LOG_TAG, "LocalTodos Size: "+getDataItems().size());
+
             }
             processingState.postValue(ProcessingState.DONE);
         }).start();
@@ -198,6 +200,7 @@ public class OverviewViewModel extends ViewModel {
         new Thread(() -> {
             try {
                 List<DataItem> localTodos = localOperationsparam.readAllDataItems();
+                Log.i(LOG_TAG, "LocalTodos Size: "+localTodos.size());
                 for (DataItem todo : localTodos) {
                     localOperationsparam.deleteDataItem(todo);
                     getDataItems().remove(todo);

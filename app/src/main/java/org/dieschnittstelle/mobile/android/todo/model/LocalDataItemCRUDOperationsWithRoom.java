@@ -1,6 +1,7 @@
 package org.dieschnittstelle.mobile.android.todo.model;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.room.Dao;
 import androidx.room.Database;
@@ -40,8 +41,6 @@ public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperati
                 .build();
         this.localDao = db.getDao();
 
-        // Firestore-Setup
-        //this.firestore = FirebaseFirestore.getInstance();
     }
 
     @Override
@@ -49,11 +48,6 @@ public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperati
         // Speichern in Room
         long newId = localDao.createItem(item);
         item.setId(newId);
-
-        // Speichern in Firestore
-        /*firestore.collection("dataitems")
-                .document(String.valueOf(item.getId()))
-                .set(item);*/
 
         return item;
     }
@@ -76,30 +70,19 @@ public class LocalDataItemCRUDOperationsWithRoom implements IDataItemCRUDOperati
     public Boolean updateDataItem(DataItem item) {
         // Update in Room
         localDao.updateItem(item);
-        // Update in Firestore
-           /*firestore.collection("dataitems")
-                   .document(String.valueOf(item.getId()))
-                   .set(item);*/
         return true;
     }
 
     @Override
     public Boolean deleteDataItem(DataItem itemToDel) {
-        DataItem item = localDao.readItem(itemToDel.getId());
 
         // Löschen aus Room
-        localDao.deleteItem(item);
-
-        // Löschen aus Firestore
-       /* firestore.collection("dataitems")
-                .document(String.valueOf(item.getId()))
-                .delete();*/
-
+        localDao.deleteItem(itemToDel);
         return true;
     }
 
     @Override
-    public void syncDataItems(OverviewViewModel viewModel) {
+    public void syncDataItems(OverviewViewModel viewModel,Boolean initialized) {
     }
 
     @Dao

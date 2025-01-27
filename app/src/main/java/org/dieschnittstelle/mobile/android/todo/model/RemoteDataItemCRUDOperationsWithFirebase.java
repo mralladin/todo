@@ -93,7 +93,7 @@ public class RemoteDataItemCRUDOperationsWithFirebase implements IDataItemCRUDOp
     }
 
     @Override
-    public void syncDataItems(OverviewViewModel viewModel) {
+    public void syncDataItems(OverviewViewModel viewModel, Boolean initialized) {
     }
 
 }

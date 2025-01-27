@@ -87,7 +87,7 @@ public class RemoteDataItemCRUDOperationsWithRetrofit implements IDataItemCRUDOp
     }
 
     @Override
-    public void syncDataItems(OverviewViewModel viewModel) {
+    public void syncDataItems(OverviewViewModel viewModel, Boolean initialized) {
     }
 
     public interface TodoRESTWebAPI {

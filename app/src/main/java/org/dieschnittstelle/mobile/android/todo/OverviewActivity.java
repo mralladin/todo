@@ -431,7 +431,7 @@ public class OverviewActivity extends AppCompatActivity {
             case R.id.action_sync:
                 viewmodel.getProcessingState().setValue(OverviewViewModel.ProcessingState.RUNNING_LONG);
                 new Thread(() -> {
-                    crudOperations.syncDataItems(viewmodel);
+                    crudOperations.syncDataItems(viewmodel,false);
                     viewmodel.getProcessingState().postValue(OverviewViewModel.ProcessingState.DONE);
                 }
                 ).start();

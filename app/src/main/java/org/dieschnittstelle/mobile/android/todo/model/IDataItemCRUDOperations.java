@@ -17,5 +17,5 @@ public interface IDataItemCRUDOperations
 
     public Boolean deleteDataItem(DataItem item);
 
-    public void syncDataItems(OverviewViewModel model);
+    public void syncDataItems(OverviewViewModel model, Boolean initialized);
 }

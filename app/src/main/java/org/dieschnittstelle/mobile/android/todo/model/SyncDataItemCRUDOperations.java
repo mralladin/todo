@@ -21,6 +21,7 @@ public class SyncDataItemCRUDOperations implements IDataItemCRUDOperations {
     public DataItem createDataItem(DataItem item) {
         DataItem createdItem = localCrud.createDataItem(item);
         try {
+            Log.i(LOG_TAG, "CreatedItem: " + item.getName());
             createdItem = remoteCrud.createDataItem(createdItem);
             localCrud.updateDataItem(createdItem);
         } catch (Exception e) {
@@ -56,7 +57,7 @@ public class SyncDataItemCRUDOperations implements IDataItemCRUDOperations {
     }
 
     @Override
-    public void syncDataItems(OverviewViewModel viewModel) {
+    public void syncDataItems(OverviewViewModel viewModel,Boolean initialized) {
         List<DataItem> remoteItems = remoteCrud.readAllDataItems();
         List<DataItem> localItems = localCrud.readAllDataItems();
         //Es gibt Lokale Todo's
@@ -80,10 +81,14 @@ public class SyncDataItemCRUDOperations implements IDataItemCRUDOperations {
         //Es gibt keine Lokalen Todo's
         else {
             //Alle Todos von Remote auf Local übertragen
+
+
             for (DataItem remoteItem : remoteItems) {
                 localCrud.createDataItem(remoteItem);
-                viewModel.getDataItems().add(remoteItem);
+                if(!initialized)
+                    viewModel.getDataItems().add(remoteItem);
             }
+            Log.i(LOG_TAG, "ViewModeltems: " + viewModel.getDataItems().size());
         }
     }
 }
